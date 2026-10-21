@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TACN Quản Trị Dịch Vụ Du Lịch Và Lữ Hành 1 - AI Speaking Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1b4d3e;
+            --primary-light: #2d7a63;
+            --accent: #f59e0b;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Modal Đăng Nhập Phân Quyền */
+        #loginModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 99999;
+        }
+        .login-card {
+            background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;
+        }
+        .login-card h3 { color: var(--primary); margin-bottom: 15px; font-size: 1.2rem; }
+        .role-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .role-btn { flex: 1; padding: 10px; border: 1px solid var(--border); background: #f1f5f9; border-radius: 8px; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+        .role-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .form-group { display: none; text-align: left; margin-bottom: 15px; }
+        .form-group.active { display: block; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px; }
+        .form-group input {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 0.95rem; outline: none; background: #fff; color: #000;
+        }
+        .form-group input:focus { border-color: var(--primary); }
+        .login-submit-btn {
+            width: 100%; background: var(--primary); color: white; border: none; padding: 12px;
+            border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; margin-top: 10px;
+        }
+        .login-submit-btn:hover { opacity: 0.9; }
+
+        /* Modal Dashboard Quản Trị Của Giáo Viên */
+        #teacherModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; z-index: 99999;
+        }
+        .teacher-card {
+            background: white; padding: 25px; border-radius: 12px; width: 92%; max-width: 900px;
+            max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .table-container { flex: 1; overflow-y: auto; margin: 15px 0; border: 1px solid var(--border); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+        th { background: #f8fafc; color: var(--primary); font-weight: 600; position: sticky; top: 0; }
+
+        header { background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink: 0; flex-wrap: wrap; gap: 10px; }
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { background: var(--accent); color: #1e293b; font-weight: 700; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 1.2rem; }
+        .logo-title h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px; }
+        .logo-title p { font-size: 0.75rem; color: #cbd5e1; }
+        
+        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .user-badge { background: rgba(255, 255, 255, 0.15); padding: 5px 10px; border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
+        .system-status { background: #10b981; color: white; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .btn-action-top { background: var(--accent); color: #1e293b; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity 0.2s; }
+        .btn-action-top:hover { opacity: 0.9; }
+        .btn-logout { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .btn-logout:hover { opacity: 0.9; }
+
+        .app-container { display: flex; flex: 1; height: calc(100vh - 64px); overflow: hidden; position: relative; }
+        
+        .sidebar-container { width: 320px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h3 { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
+        .unit-list { overflow-y: auto; flex: 1; padding: 12px; }
+        .unit-item { padding: 12px 16px; border-radius: 8px; cursor: pointer; margin-bottom: 6px; transition: all 0.2s; border: 1px solid transparent; }
+        .unit-item:hover { background: #f1f5f9; }
+        .unit-item.active { background: #ecfdf5; border-color: #a7f3d0; color: var(--primary); font-weight: 600; }
+        .unit-item span { font-size: 0.75rem; display: block; color: var(--text-muted); margin-bottom: 2px; }
+        .unit-item.active span { color: var(--primary-light); }
+
+        .content-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-main); overflow: hidden; }
+        .content-header { background: white; padding: 20px 30px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .content-header h2 { font-size: 1.4rem; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
+        
+        .tabs { display: flex; gap: 12px; border-bottom: 2px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { background: none; border: none; padding: 10px 18px; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; white-space: nowrap; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-btn i { margin-right: 6px; }
+
+        .tab-pane { flex: 1; overflow-y: auto; padding: 24px 30px; display: none; }
+        .tab-pane.active { display: block; }
+
+        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; color: var(--text-main); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        
+        .vocab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        .vocab-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+        .vocab-card h4 { color: var(--primary); font-size: 1.05rem; margin-bottom: 4px; }
+        .vocab-card .ipa { font-size: 0.85rem; color: var(--text-muted); font-family: monospace; margin-bottom: 8px; }
+        .vocab-card p { font-size: 0.9rem; margin-bottom: 12px; }
+        .btn-audio { background: #e0f2fe; color: #0369a1; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; }
+        
+        .exercise-section { margin-bottom: 24px; background: #f8fafc; padding: 18px; border-radius: 10px; border: 1px solid var(--border); }
+        .exercise-section h3 { font-size: 1.05rem; font-weight: 600; color: var(--primary); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        
+        .matching-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        @media(max-width: 768px) { .matching-grid { grid-template-columns: 1fr; } }
+        .matching-list { display: flex; flex-direction: column; gap: 10px; }
+        .matching-item { display: flex; align-items: center; justify-content: space-between; background: white; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; gap: 10px; }
+        .matching-item select { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-weight: 600; color: var(--primary); }
+
+        .fill-item { background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; font-size: 0.95rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .fill-item input { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; width: 260px; max-width: 100%; font-size: 0.9rem; }
+        
+        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-action:hover { opacity: 0.9; }
+        .score-badge { background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; border: 1px solid #bbf7d0; }
+
+        .chat-container { display: flex; flex-direction: column; height: 480px; background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-top: 12px; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: #f8fafc; }
+        .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; }
+        .chat-bubble.ai { background: white; border: 1px solid var(--border); align-self: flex-start; }
+        .chat-bubble.user { background: var(--primary); color: white; align-self: flex-end; }
+        .chat-input-area { padding: 14px; background: white; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .chat-input-area input { flex: 1; min-width: 200px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+
+        .pres-box { display: flex; flex-direction: column; gap: 16px; }
+        .topic-card { background: #f0fdf4; border-left: 4px solid #10b981; padding: 16px; border-radius: 0 8px 8px 0; margin-bottom: 12px; }
+        .pres-record-area { text-align: center; padding: 25px; background: white; border: 2px dashed var(--border); border-radius: 12px; }
+        .btn-mic { background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 30px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 1rem; }
+        .btn-mic.recording { background: #ef4444; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .score-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 16px; }
+        .score-metric { background: white; padding: 12px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
+        .score-metric h4 { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
+        .score-metric .score-val { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+        .eval-report { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 16px; margin-top: 14px; font-size: 0.9rem; color: #92400e; line-height: 1.6; }
+        .error-text { color: var(--danger); font-weight: 600; text-decoration: underline; }
+
+        @media(max-width: 900px) {
+            .sidebar-container { position: absolute; z-index: 100; height: 100%; transform: translateX(-100%); }
+            .sidebar-container.mobile-open { transform: translateX(0); }
+            .mobile-menu-toggle { display: inline-flex !important; }
+        }
+        .mobile-menu-toggle { display: none; background: var(--primary-light); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; margin-right: 8px; }
+    </style>
+</head>
+<body>
+
+    <!-- Modal Đăng Nhập Phân Quyền -->
+    <div id="loginModal">
+        <div class="login-card">
+            <h3>HỆ THỐNG ĐĂNG NHẬP</h3>
+            <div class="role-tabs">
+                <button class="role-btn active" id="btnRoleStudent" type="button" onclick="switchLoginRole('student')">Sinh Viên</button>
+                <button class="role-btn" id="btnRoleTeacher" type="button" onclick="switchLoginRole('teacher')">Giáo Viên</button>
+            </div>
+
+            <!-- Form Sinh Viên -->
+            <div class="form-group active" id="formStudent">
+                <label>Họ và tên sinh viên:</label>
+                <input type="text" id="studentNameInput" placeholder="Ví dụ: Nguyễn Văn A">
+                <label style="margin-top: 10px;">Lớp học:</label>
+                <input type="text" id="studentClassInput" placeholder="Ví dụ: DL2026">
+            </div>
+
+            <!-- Form Giáo Viên -->
+            <div class="form-group" id="formTeacher">
+                <label>Mật khẩu quản trị giáo viên:</label>
+                <input type="password" id="teacherPassInput" placeholder="Nhập mật khẩu (mặc định: gv123)">
+            </div>
+
+            <button class="login-submit-btn" type="button" onclick="handleLogin()">Truy Cập Hệ Thống</button>
+        </div>
+    </div>
+
+    <!-- Modal Dashboard Quản Trị Của Giáo Viên -->
+    <div id="teacherModal">
+        <div class="teacher-card">
+            <h3 style="color: var(--primary); display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa-solid fa-chalkboard-user"></i> Bảng Quản Trị & Kết Quả Sinh Viên</span>
+                <button style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" type="button" onclick="closeTeacherDashboard()"><i class="fa-solid fa-xmark"></i></button>
+            </h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">Danh sách toàn bộ kết quả luyện tập của tất cả sinh viên không giới hạn số lượng.</p>
+            
+            <div class="table-container">
+                <table id="teacherLogTable">
+                    <thead>
+                        <tr>
+                            <th>Họ tên</th>
+                            <th>Lớp</th>
+                            <th>Thời gian</th>
+                            <th>Unit</th>
+                            <th>Hoạt động</th>
+                            <th>Điểm số</th>
+                            <th>Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherLogBody"></tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn-action" style="background: #ef4444;" type="button" onclick="clearAllLogs()">Xóa Dữ Liệu</button>
+                <button class="btn-action-top" type="button" onclick="exportExcelReport()"><i class="fa-solid fa-file-excel"></i> Xuất Excel Tất Cả</button>
+                <button class="btn-action" type="button" onclick="closeTeacherDashboard()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="logo-area">
+            <button class="mobile-menu-toggle" type="button" onclick="toggleMobileSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <div class="logo-icon">V</div>
+            <div class="logo-title">
+                <h1>TACN QUẢN TRỊ DỊCH VỤ DU LỊCH VÀ LỮ HÀNH 1</h1>
+                <p>Interactive AI Speaking Lab & Practice System - 12 Units</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="user-badge" id="displayUserInfo"></div>
+            <button class="btn-action-top" id="headerActionBtn" type="button" onclick="handleHeaderAction()"><i class="fa-solid fa-file-excel"></i> Xuất Báo Cáo</button>
+            <button class="btn-logout" type="button" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+            <div class="system-status">
+                <i class="fa-solid fa-circle-check"></i> System Online
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <div class="sidebar-container" id="sidebarContainer">
+            <div class="sidebar-header">
+                <h3>CURRICULUM (12 UNITS)</h3>
+                <button style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted);" type="button" onclick="toggleMobileSidebar()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="unit-list" id="unitList"></div>
+        </div>
+
+        <div class="content-area">
+            <div class="content-header">
+                <h2 id="currentUnitTitle">Unit 1: Tourist Information</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" type="button" onclick="switchTab('vocab')"><i class="fa-solid fa-book"></i>1. Vocab Exercises</button>
+                    <button class="tab-btn" type="button" onclick="switchTab('structure')"><i class="fa-solid fa-layer-group"></i>2. Structure (15 Sentences)</button>
+                    <button class="tab-btn" type="button" onclick="switchTab('roleplay')"><i class="fa-solid fa-comments"></i>3. AI Role-Play Interactive</button>
+                    <button class="tab-btn" type="button" onclick="switchTab('presentation')"><i class="fa-solid fa-microphone-lines"></i>4. Presentation Examiner</button>
+                </div>
+            </div>
+
+            <!-- Tab 1: Vocab -->
+            <div id="tab-vocab" class="tab-pane active">
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-book-open" style="color:var(--primary);"></i>Key Vocabulary Audio</div>
+                    <div class="vocab-grid" id="vocabGrid"></div>
+                </div>
+                <div class="card">
+                    <div class="exercise-section">
+                        <h3>Part 1: Match Words with Definitions (10 Questions - Randomized) <span class="score-badge" id="matchingScoreBadge">Score: - / 10</span></h3>
+                        <div class="matching-grid">
+                            <div class="matching-list" id="matchingQuestions"></div>
+                            <div class="matching-list" id="matchingDefinitions" style="background: white; padding: 12px; border-radius: 8px; border: 1px solid var(--border);"></div>
+                        </div>
+                        <button class="btn-action" type="button" onclick="gradeMatching()"><i class="fa-solid fa-check-circle"></i> Grade Matching</button>
+                    </div>
+
+                    <div class="exercise-section">
+                        <h3>Part 2: Fill in the Blanks (10 Questions) <span class="score-badge" id="fillScoreBadge">Score: - / 10</span></h3>
+                        <div id="fillQuestions"></div>
+                        <button class="btn-action" style="margin-top: 10px;" type="button" onclick="gradeFillInBlanks()"><i class="fa-solid fa-check-circle"></i> Grade Fill-in-the-Blanks</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Structure -->
+            <div id="tab-structure" class="tab-pane">
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-code" style="color:var(--primary);"></i>Grammar & Pattern Notes</div>
+                    <div id="structureNotes" style="font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid var(--border);"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-list-check" style="color:var(--primary);"></i>Structure Exercises (15 Sentences) <span class="score-badge" id="structureScoreBadge">Score: - / 15</span></div>
+                    <div id="structureExercises"></div>
+                    <button class="btn-action" style="margin-top: 15px;" type="button" onclick="gradeStructureExercises()"><i class="fa-solid fa-check-circle"></i> Submit & Grade Structure Answers</button>
+                </div>
+            </div>
+
+            <!-- Tab 3: Interactive AI Role-Play -->
+            <div id="tab-roleplay" class="tab-pane">
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <div class="card-title"><i class="fa-solid fa-headset" style="color:var(--primary);"></i>Real-time Interactive AI Role-Play & Criteria Assessment</div>
+                    <div id="roleplayDescContainer"></div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages"></div>
+                        <div class="chat-input-area">
+                            <button class="btn-action" style="padding: 8px 12px; background: #3b82f6;" type="button" onclick="toggleRolePlayVoice()"><i class="fa-solid fa-microphone" id="micChatIcon"></i></button>
+                            <input type="text" id="chatInput" placeholder="Type or speak your answer..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+                            <button class="btn-action" type="button" onclick="sendChatMessage()">Send</button>
+                            <button class="btn-action" style="background: #ef4444;" type="button" onclick="endRolePlaySession()">End & Evaluate</button>
+                        </div>
+                    </div>
+                    <div id="roleplayFinalEval" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Presentation Examiner -->
+            <div id="tab-presentation" class="tab-pane">
+                <div class="card pres-box">
+                    <div class="card-title"><i class="fa-solid fa-graduation-cap" style="color:var(--primary);"></i>AI Presentation Examiner Report (4 Official Criteria)</div>
+                    <div id="presTopicsContainer"></div>
+                    <div class="pres-record-area">
+                        <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 0.9rem;">Click microphone and deliver your presentation. Click Stop when finished to instantly generate the strict examiner report with highlighted mistakes in red.</p>
+                        <button class="btn-mic" id="presMicBtn" type="button" onclick="togglePresentationRecording()"><i class="fa-solid fa-microphone"></i> <span id="presMicText">Start Presentation Recording</span></button>
+                        <div id="presTranscriptBox" style="margin-top: 16px; font-style: italic; color: var(--text-muted); max-height: 140px; overflow-y: auto; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border); text-align: left;">Your speech transcript will appear here...</div>
+                    </div>
+                    <div id="presEvaluationArea" style="display: none;">
+                        <h3 style="font-size: 1.1rem; color: var(--primary); margin-bottom: 10px;"><i class="fa-solid fa-chart-line"></i> Comprehensive Examiner Report</h3>
+                        <div class="score-card-grid">
+                            <div class="score-metric"><h4>Overall</h4><div class="score-val" id="scorePresOverall">0/10</div></div>
+                            <div class="score-metric"><h4>Structure & Org (25%)</h4><div class="score-val" id="scorePresStructure">0/10</div></div>
+                            <div class="score-metric"><h4>Content & Knowledge (30%)</h4><div class="score-val" id="scorePresContent">0/10</div></div>
+                            <div class="score-metric"><h4>Lexical & Grammar (25%)</h4><div class="score-val" id="scorePresLexical">0/10</div></div>
+                            <div class="score-metric"><h4>Pronun & Word Count (20%)</h4><div class="score-val" id="scorePresPronun">0/10</div></div>
+                        </div>
+                        <div class="eval-report" id="presDetailedFeedback"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        try { currentUser = JSON.parse(localStorage.getItem("tacn_current_user")); } catch(e) { currentUser = null; }
+
+        let studentLogs = [];
+        try { studentLogs = JSON.parse(localStorage.getItem("tacn_student_logs")) || []; } catch(e) { studentLogs = []; }
+
+        let activeRole = 'student';
+
+        function switchLoginRole(role) {
+            activeRole = role;
+            if(role === 'student') {
+                document.getElementById("btnRoleStudent").classList.add('active');
+                document.getElementById("btnRoleTeacher").classList.remove('active');
+                document.getElementById("formStudent").classList.add('active');
+                document.getElementById("formTeacher").classList.remove('active');
+            } else {
+                document.getElementById("btnRoleTeacher").classList.add('active');
+                document.getElementById("btnRoleStudent").classList.remove('active');
+                document.getElementById("formTeacher").classList.add('active');
+                document.getElementById("formStudent").classList.remove('active');
+            }
+        }
+
+        function handleLogin() {
+            if(activeRole === 'student') {
+                const name = document.getElementById("studentNameInput").value.trim();
+                const className = document.getElementById("studentClassInput").value.trim();
+                if(!name || !className) {
+                    alert("Vui lòng nhập đầy đủ Họ tên và Lớp học!");
+                    return;
+                }
+                currentUser = { role: 'student', name: name, className: className };
+            } else {
+                const pass = document.getElementById("teacherPassInput").value.trim();
+                if(pass !== "gv123") {
+                    alert("Mật khẩu giáo viên không chính xác! (Mặc định: gv123)");
+                    return;
+                }
+                currentUser = { role: 'teacher', name: 'Giáo Viên Quản Trị', className: 'Admin' };
+            }
+
+            localStorage.setItem("tacn_current_user", JSON.stringify(currentUser));
+            applyUserSession();
+        }
+
+        function handleLogout() {
+            if(confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?")) {
+                localStorage.removeItem("tacn_current_user");
+                currentUser = null;
+                document.getElementById("loginModal").style.display = "flex";
+                document.getElementById("studentNameInput").value = "";
+                document.getElementById("studentClassInput").value = "";
+                document.getElementById("teacherPassInput").value = "";
+            }
+        }
+
+        function applyUserSession() {
+            if(currentUser && currentUser.role) {
+                document.getElementById("loginModal").style.display = "none";
+                if(currentUser.role === 'student') {
+                    document.getElementById("displayUserInfo").innerHTML = `<i class="fa-solid fa-user-graduate"></i> <strong>${currentUser.name}</strong> (${currentUser.className})`;
+                    document.getElementById("headerActionBtn").innerHTML = `<i class="fa-solid fa-file-excel"></i> Xuất Báo Cáo Của Tôi`;
+                } else {
+                    document.getElementById("displayUserInfo").innerHTML = `<i class="fa-solid fa-chalkboard-user"></i> <strong>Giáo Viên Quản Trị</strong>`;
+                    document.getElementById("headerActionBtn").innerHTML = `<i class="fa-solid fa-users-gear"></i> Mở Bảng Quản Trị`;
+                }
+            } else {
+                document.getElementById("loginModal").style.display = "flex";
+            }
+        }
+
+        function handleHeaderAction() {
+            if(currentUser && currentUser.role === 'teacher') {
+                openTeacherDashboard();
+            } else {
+                exportExcelReport();
+            }
+        }
+
+        function openTeacherDashboard() {
+            const tbody = document.getElementById("teacherLogBody");
+            tbody.innerHTML = "";
+            if(studentLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Chưa có dữ liệu học tập nào từ sinh viên.</td></tr>`;
+            } else {
+                studentLogs.forEach(log => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${log.name}</td>
+                        <td>${log.className}</td>
+                        <td>${log.time}</td>
+                        <td>${log.unit}</td>
+                        <td>${log.activity}</td>
+                        <td><strong>${log.score}</strong></td>
+                        <td>${log.detail}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            document.getElementById("teacherModal").style.display = "flex";
+        }
+
+        function closeTeacherDashboard() {
+            document.getElementById("teacherModal").style.display = "none";
+        }
+
+        function clearAllLogs() {
+            if(confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu kết quả học tập của tất cả sinh viên?")) {
+                studentLogs = [];
+                localStorage.removeItem("tacn_student_logs");
+                openTeacherDashboard();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            applyUserSession();
+        });
+
+        function logActivity(unitNum, activityName, scoreVal, detailText) {
+            if(!currentUser || currentUser.role !== 'student') return;
+            const now = new Date();
+            const timeString = now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN');
+            
+            const logEntry = {
+                name: currentUser.name,
+                className: currentUser.className,
+                time: timeString,
+                unit: `Unit ${unitNum}`,
+                activity: activityName,
+                score: scoreVal,
+                detail: detailText
+            };
+
+            studentLogs.push(logEntry);
+            localStorage.setItem("tacn_student_logs", JSON.stringify(studentLogs));
+        }
+
+        function toggleMobileSidebar() {
+            document.getElementById("sidebarContainer").classList.toggle("mobile-open");
+        }
+
+        // DỮ LIỆU CHUẨN 100% TỪ FILE ĐÍNH KÈM (12 UNITS)
+        const curriculumData = [
+            {
+                unit: 1, title: "Tourist Information",
+                vocab: [
+                    {word: "Floating market", ipa: "/ˈfləʊ.tɪŋ ˈmɑː.kɪt/", meaning: "Chợ nổi"},
+                    {word: "Waterfall", ipa: "/ˈwɔː.tə.fɔːl/", meaning: "Thác nước"},
+                    {word: "Grotto", ipa: "/ˈɡrɒt.əʊ/", meaning: "Hang/động"},
+                    {word: "Bird sanctuary", ipa: "/bɜːd ˈsæŋk.tʃu.ə.ri/", meaning: "Sân chim/khu bảo tồn chim"},
+                    {word: "Pagoda", ipa: "/pəˈɡəʊ.də/", meaning: "Chùa"},
+                    {word: "Brochure", ipa: "/ˈbrəʊ.ʃə/", meaning: "Sách quảng cáo nhỏ"}
+                ],
+                matchingQuestions: ["1. Floating market", "2. Bird sanctuary", "3. Brochure", "4. Grotto", "5. Waterfall", "6. Scuba diving", "7. Public relations", "8. Kayaking", "9. Hiking", "10. Destination"],
+                matchingRawDefs: [
+                    {code: "A", text: "A place where birds are protected and live in nature"},
+                    {code: "B", text: "A small printed book/folder containing information and pictures about a place"},
+                    {code: "C", text: "A market where goods are sold from boats on a river"},
+                    {code: "D", text: "A small cave or cavern, especially an artificial one"},
+                    {code: "E", text: "Water falling from a height over a cliff or rocks"},
+                    {code: "F", text: "The activity of swimming underwater using special breathing equipment"},
+                    {code: "G", text: "The activity of keeping good relationships between an organization and the public"},
+                    {code: "H", text: "The activity of traveling in a small, narrow watercraft using a double-bladed paddle"},
+                    {code: "I", text: "The activity of going for long walks in the countryside/mountains"},
+                    {code: "J", text: "The place to which someone or something is going or being sent"}
+                ],
+                matchingAnswerMap: {0:"C", 1:"A", 2:"B", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. Tourists love visiting Cai Rang ______ in Can Tho to see trading on boats.", ans: "floating market"},
+                    {q: "2. The tourist information center gave us a colorful ______ about local attractions.", ans: "brochure"},
+                    {q: "3. You shouldn't miss the Ban Gioc ______, which is one of the most stunning natural sights.", ans: "waterfall"},
+                    {q: "4. Mr. Carter works as a ______ director to promote his country's image abroad.", ans: "public relations"},
+                    {q: "5. Tra Su Cajuput Forest is a famous ______ where thousands of storks live.", ans: "bird sanctuary"},
+                    {q: "6. We explored a dark and mysterious ______ inside the limestone mountain in Halong Bay.", ans: "grotto"},
+                    {q: "7. People go to the ______ to pray for peace and good fortune.", ans: "pagoda"},
+                    {q: "8. If you enjoy extreme sports in the sea, you can try ______ to see coral reefs.", ans: "scuba diving"},
+                    {q: "9. They spent the whole morning ______ through the national park's jungle trails.", ans: "hiking"},
+                    {q: "10. Phu Quoc island has become a top holiday ______ for international travelers.", ans: "destination"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong><br>- Cho lời khuyên/gợi ý: If you're looking for [X], then go to [Y] / Don't miss [X] / [X] is a must for any visitors to [city] / You can't leave [city] without [doing X].<br>- Danh từ ghép (Compound Nouns) & Cụm từ chỉ thời gian/khoảng cách (e.g., a five-minute walk).",
+                structureExercises: [
+                    {q: "1. 'It takes two hours to drive to the airport.' => It's a ____________", ans: "two-hour drive to the airport"},
+                    {q: "2. 'We stayed in a hotel with three stars.' => We stayed in a ____________", ans: "three-star hotel"},
+                    {q: "3. 'The journey to Cai Rang market takes 3 hours.' => It's a ____________", ans: "three-hour journey to Cai Rang market"},
+                    {q: "4. If you visit Hanoi, visiting Pho ____________ (must)", ans: "is a must"},
+                    {q: "5. When you are in Da Nang, ____________ the Golden Bridge.", ans: "don't miss"},
+                    {q: "6. ____________ peace, then go to Sapa.", ans: "If you're looking for"},
+                    {q: "7. You ____________ Hue without trying Bun Bo Hue.", ans: "can't leave"},
+                    {q: "8. Match 'Theme' with a noun: Theme (Park / City / Mall)", ans: "park"},
+                    {q: "9. Match 'Shopping' with a noun: Shopping (Guide / Mall / Trip)", ans: "mall"},
+                    {q: "10. Match 'Water' with a noun: Water (Sports / Park / City)", ans: "sports"},
+                    {q: "11. 'It takes ten minutes to ride a bike to the lake.' => It's a ____________", ans: "ten-minute bike ride to the lake"},
+                    {q: "12. If you are looking for local crafts, ____________ to Ben Thanh Market.", ans: "go"},
+                    {q: "13. Don't ____________ the boat tour along the Mekong River.", ans: "miss"},
+                    {q: "14. Thien Cung Cave is a ____________ for any visitors to Halong Bay.", ans: "must"},
+                    {q: "15. 'The trip to the island lasts two days.' => It's a ____________", ans: "two-day trip to the island"}
+                ],
+                roleplayScenario: "<strong>Student A (Khách du lịch):</strong> Bạn có 2 ngày nghỉ cuối tuần và muốn tìm một nơi thư giãn. Hãy đến Văn phòng Thông tin Du lịch để hỏi thông tin về điểm đến, hoạt động và phương tiện đi lại.<br><strong>Student B (Nhân viên tư vấn):</strong> Chào đón khách, lắng nghe nhu cầu và đưa ra các gợi ý/lời khuyên phù hợp (sử dụng cấu trúc: If you're looking for..., Don't miss..., ...is a must).",
+                presentationTopics: [
+                    "Topic 1: Famous tourist attractions and activities in the Mekong Delta.",
+                    "Topic 2: The role and functions of a Tourist Information Office in promoting destination tourism."
+                ]
+            },
+            {
+                unit: 2, title: "Tour Itineraries",
+                vocab: [
+                    {word: "Itinerary", ipa: "/aɪˈtɪn.ər.ər.i/", meaning: "Lịch trình"},
+                    {word: "Transfer", ipa: "/trænsˈfɜːr/", meaning: "Trung chuyển/đón tiễn"},
+                    {word: "Heritage site", ipa: "/ˈher.ɪ.tɪdʒ saɪt/", meaning: "Di sản văn hóa/thiên nhiên"},
+                    {word: "Overnight train", ipa: "/ˌəʊ.və.naɪt ˈtreɪn/", meaning: "Tàu đêm"},
+                    {word: "Limestone cave", ipa: "/ˈlaɪm.stəʊn keɪv/", meaning: "Động đá vôi"}
+                ],
+                matchingQuestions: ["1. Itinerary", "2. Transfer", "3. Explore", "4. Border", "5. Heritage site", "6. Sightseeing", "7. Overnight train", "8. Depart", "9. Limestone cave", "10. Group leader"],
+                matchingRawDefs: [
+                    {code: "A", text: "A plan or line of travel; a detailed schedule of a trip"},
+                    {code: "B", text: "To move from one vehicle, flight, or place to another"},
+                    {code: "C", text: "To travel through an unfamiliar area in order to learn about it"},
+                    {code: "D", text: "The line that separates two countries or regions"},
+                    {code: "E", text: "A place of special cultural or physical significance recognized globally"},
+                    {code: "F", text: "The activity of visiting famous or interesting places as a tourist"},
+                    {code: "G", text: "A train that travels during the night hours"},
+                    {code: "H", text: "To leave a place, especially to start a journey"},
+                    {code: "I", text: "A natural underground chamber formed in limestone rock"},
+                    {code: "J", text: "A person who is in charge of a group of travelers"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. The travel agent gave us a detailed 4-day ______ for our Mekong trip.", ans: "itinerary"},
+                    {q: "2. On arrival at Bangkok airport, our bus will ______ you to your hotel.", ans: "transfer"},
+                    {q: "3. You are free in the afternoon to ______ the ancient town on foot.", ans: "explore"},
+                    {q: "4. On Day 4, the group will cross the ______ from Thailand into Laos.", ans: "border"},
+                    {q: "5. Luang Prabang was officially declared a UNESCO World ______ site.", ans: "heritage"},
+                    {q: "6. The coach will ______ from Victoria Station at exactly 8:15 AM.", ans: "depart"},
+                    {q: "7. We will spend the afternoon ______ around the city center and visiting temples.", ans: "sightseeing"},
+                    {q: "8. Taking an ______ train helps tourists save on accommodation costs for one night.", ans: "overnight"},
+                    {q: "9. Tourists love hiking to explore the spectacular ______ caves in Vang Vieng.", ans: "limestone"},
+                    {q: "10. A professional tour ______ will accompany the group throughout the 16-day journey.", ans: "leader"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Thì tương lai trong lịch trình tour: Present Simple (lịch trình cố định), WILL (dự đoán/quyết định tức thì), BE GOING TO (kế hoạch đã định).",
+                structureExercises: [
+                    {q: "1. The coach ______ (depart) from London at 08.15 tomorrow morning.", ans: "departs"},
+                    {q: "2. Look at those dark clouds! It ______ (rain) during our trekking tour.", ans: "is going to rain"},
+                    {q: "3. Don't worry about carrying heavy bags; I ______ (help) you with them.", ans: "will help"},
+                    {q: "4. According to the itinerary, we ______ (arrive) in Oxford at 10.00.", ans: "arrive"},
+                    {q: "5. They ______ (spend) three days in Siem Reap next week as planned.", ans: "are going to spend"},
+                    {q: "6. I think tourists ______ (love) the boat trip on Tonle Sap Lake.", ans: "will love"},
+                    {q: "7. The flight to Vientiane ______ (take off) at 9:30 AM every day.", ans: "takes off"},
+                    {q: "8. We have booked the tickets; we ______ (fly) to Bangkok this weekend.", ans: "are going to fly"},
+                    {q: "9. On Day 3, guests ______ (have) free time for shopping.", ans: "will have"},
+                    {q: "10. 'What would you like to drink?' – 'I ______ (have) some orange juice, please.'", ans: "will have"},
+                    {q: "11. The museum ______ (close) at 5:00 PM on weekdays.", ans: "closes"},
+                    {q: "12. Our travel agency ______ (organize) a new tour to Laos next month.", ans: "is going to organize"},
+                    {q: "13. I'm sure you ______ (enjoy) climbing Mount Phousi to watch the sunrise.", ans: "will enjoy"},
+                    {q: "14. The boat ride across the Mekong River ______ (start) at 7:00 AM.", ans: "starts"},
+                    {q: "15. We ______ (not visit) the Silver Pagoda because of time limits.", ans: "are not going to visit"}
+                ],
+                roleplayScenario: "<strong>Student A (Nhân viên đại lý lữ hành):</strong> Giới thiệu lịch trình chuyến đi 1 ngày (Day Trip) hoặc 4 ngày cho khách, trả lời câu hỏi về khởi hành, phương tiện, địa điểm.<br><strong>Student B (Khách du lịch):</strong> Hỏi chi tiết về thời gian biểu, thời gian tự do, các hoạt động có trong chương trình tour.",
+                presentationTopics: [
+                    "Topic 1: Presenting a 4-day tour itinerary exploring the Mekong Delta.",
+                    "Topic 2: Comparing means of transport for short and long tour itineraries."
+                ]
+            },
+            {
+                unit: 3, title: "Tour Booking",
+                vocab: [
+                    {word: "Booking reference number", ipa: "/ˈbʊk.ɪŋ ˈref.ər.əns/", meaning: "Mã số đặt chỗ"},
+                    {word: "Availability", ipa: "/əˌveɪ.ləˈbɪl.ə.ti/", meaning: "Tình trạng chỗ còn trống"},
+                    {word: "Admission fee", ipa: "/ədˈmɪʃ.ən fiː/", meaning: "Phí tham quan/vé vào cửa"},
+                    {word: "Full-board", ipa: "/ˌfʊl ˈbɔːd/", meaning: "Tiền phòng gồm ăn 3 bữa"},
+                    {word: "Half-board", ipa: "/ˌhɑːf ˈbɔːd/", meaning: "Tiền phòng gồm ăn sáng & 1 bữa chính"}
+                ],
+                matchingQuestions: ["1. Booking reference", "2. Availability", "3. Admission fee", "4. Prepaid", "5. Full-board", "6. Half-board", "7. Self-catering", "8. Twin room", "9. Confirm", "10. Local tour"],
+                matchingRawDefs: [
+                    {code: "A", text: "A unique code assigned to a specific reservation"},
+                    {code: "B", text: "The state of being reachable or free to be reserved"},
+                    {code: "C", text: "The money charged to enter a museum, park, or attraction"},
+                    {code: "D", text: "Paid for in advance before the service is used"},
+                    {code: "E", text: "Accommodation including all three daily meals (breakfast, lunch, dinner)"},
+                    {code: "F", text: "Accommodation including breakfast and one main meal (usually dinner)"},
+                    {code: "G", text: "Accommodation where guests prepare their own meals"},
+                    {code: "H", text: "A hotel room with two separate single beds"},
+                    {code: "I", text: "To state or show that a reservation is definite"},
+                    {code: "J", text: "A short tour within a specific city or region"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. Let me check the ______ of rooms on the 14th of November.", ans: "availability"},
+                    {q: "2. Your ______ number is RB-9042; please keep it for check-in.", ans: "booking reference"},
+                    {q: "3. Tour packages usually include ______ admission fees for all heritage sites.", ans: "prepaid"},
+                    {q: "4. Would you like to book a ______ room or a double room for your stay?", ans: "twin"},
+                    {q: "5. We chose a ______ meal plan because we prefer having lunch at local restaurants.", ans: "half-board"},
+                    {q: "6. Families with children often choose ______ accommodation to cook their own food.", ans: "self-catering"},
+                    {q: "7. Please call us back before Friday if you wish to ______ your tour booking.", ans: "confirm"},
+                    {q: "8. The ticket price includes the ______ to the national museum and park.", ans: "admission fee"},
+                    {q: "9. On a ______-board plan, breakfast, lunch, and dinner are all provided by the hotel.", ans: "full"},
+                    {q: "10. Many tourists prefer booking ______ tours after arriving at their destination city.", ans: "local"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Mẫu câu tiếp nhận đặt tour và Câu hỏi gián tiếp lịch sự (Indirect Questions: Can/Could you tell me...? / Do you know...?).",
+                structureExercises: [
+                    {q: "1. 'What kind of tour would you like?' => Can I know ____________?", ans: "what kind of tour you would like"},
+                    {q: "2. 'How many people is it for?' => Can you tell me ____________?", ans: "how many people it is for"},
+                    {q: "3. 'How long does the journey take?' => Do you know ____________?", ans: "how long the journey takes"},
+                    {q: "4. 'When does the flight depart?' => Could you tell me ____________?", ans: "when the flight departs"},
+                    {q: "5. 'Is breakfast included in the rate?' => Can you tell me if ____________?", ans: "breakfast is included in the rate"},
+                    {q: "6. 'Where is the hotel located?' => Do you know ____________?", ans: "where the hotel is located"},
+                    {q: "7. 'What time does the tour start?' => Could you tell me ____________?", ans: "what time the tour starts"},
+                    {q: "8. 'How much does the package cost?' => Can I know ____________?", ans: "how much the package costs"},
+                    {q: "9. 'Do you have a sea-view room available?' => Could you tell me whether ____________?", ans: "you have a sea-view room available"},
+                    {q: "10. 'What is your passport number?' => Can I take ____________?", ans: "your passport number"},
+                    {q: "11. 'How do you want to pay?' => Could you tell me ____________?", ans: "how you want to pay"},
+                    {q: "12. 'Are there any discount rates for children?' => Do you know if ____________?", ans: "there are any discount rates for children"},
+                    {q: "13. 'What language does the guide speak?' => Can you tell me ____________?", ans: "what language the guide speaks"},
+                    {q: "14. 'Which hotel are we staying in?' => Could I know ____________?", ans: "which hotel we are staying in"},
+                    {q: "15. 'Can I pay by credit card?' => Do you know if ____________?", ans: "I can pay by credit card"}
+                ],
+                roleplayScenario: "<strong>Student A (Travel Agent):</strong> Tiếp nhận đặt tour, dùng câu hỏi gián tiếp lịch sự ghi nhận thông tin, kiểm tra tình trạng chỗ và cấp mã đặt chỗ.<br><strong>Student B (Customer):</strong> Đặt câu hỏi tìm hiểu thông tin tour du lịch, đưa ra các yêu cầu riêng (phòng biển, B&B) và xác nhận.",
+                presentationTopics: [
+                    "Topic 1: Pros and cons of buying a package tour versus organizing a local tour independently.",
+                    "Topic 2: Essential steps and communication skills for travel agents when taking a customer booking."
+                ]
+            },
+            {
+                unit: 4, title: "Tour Commentaries",
+                vocab: [
+                    {word: "Sightseer", ipa: "/ˈsaɪtˌsiː.ər/", meaning: "Khách tham quan"},
+                    {word: "Magnificent", ipa: "/mæɡˈnɪf.ɪ.sənt/", meaning: "Nguy nga, tráng lệ"},
+                    {word: "Dedicated to", ipa: "/ˈded.ɪ.keɪ.tɪd tuː/", meaning: "Thờ/dành riêng cho"},
+                    {word: "Diorama", ipa: "/ˌdaɪ.əˈrɑː.mə/", meaning: "Mô hình thu nhỏ"},
+                    {word: "Handicraft", ipa: "/ˈhæn.di.krɑːft/", meaning: "Đồ thủ công mỹ nghệ"}
+                ],
+                matchingQuestions: ["1. Sightseer", "2. Handicraft", "3. Diorama", "4. Crypt", "5. Dome", "6. Monument", "7. Souvenir", "8. Magnificent", "9. Dedicated to", "10. Stall"],
+                matchingRawDefs: [
+                    {code: "A", text: "A person who visits places of interest in a city or area"},
+                    {code: "B", text: "Objects made by hand in a traditional way"},
+                    {code: "C", text: "A three-dimensional mini model of a scene or city"},
+                    {code: "D", text: "An underground room under a church, used as a chapel or burial place"},
+                    {code: "E", text: "A rounded vault forming the roof of a building or structure"},
+                    {code: "F", text: "A structure erected to commemorate a person or event"},
+                    {code: "G", text: "Something bought or kept as a reminder of a place or holiday"},
+                    {code: "H", text: "Extremely beautiful, elaborate, or impressive"},
+                    {code: "I", text: "Devoted or consecrated to a specific sacred/special purpose"},
+                    {code: "J", text: "A small stand or booth for selling goods in a market"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. On your right is the ______ Cathedral with its iconic large dome.", ans: "magnificent"},
+                    {q: "2. Thousands of ______ gather every day to take photos of the Eiffel Tower.", ans: "sightseers"},
+                    {q: "3. The Parthenon temple was built in ancient Greece and ______ goddess Athena.", ans: "dedicated to"},
+                    {q: "4. Inside the museum, you can see a mini ______ showing the model of the whole city.", ans: "diorama"},
+                    {q: "5. Famous heroes and noblemen were buried in the church's underground ______.", ans: "crypt"},
+                    {q: "6. Don't forget to buy some local ______ like wooden carvings as gifts.", ans: "handicrafts"},
+                    {q: "7. Our driver is very ______; he has driven tour buses safely for over 15 years.", ans: "experienced"},
+                    {q: "8. The guide stopped at the crafts market so tourists could visit various souvenir ______.", ans: "stalls"},
+                    {q: "9. The tourist guide gave a ______ explanation of the history of the ancient citadel.", ans: "magnificent"},
+                    {q: "10. The Eiffel Tower is one of the most famous ______ in Paris.", ans: "monuments"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Ngôn ngữ hướng dẫn vị trí, So sánh nhất (Superlatives), Thể bị động (Passives), Thì Hiện tại hoàn thành.",
+                structureExercises: [
+                    {q: "1. On / left / beautiful / St Paul's Cathedral. => ____________", ans: "On your left is the beautiful St Paul's Cathedral"},
+                    {q: "2. It / stand / here / over / 300 years. => ____________", ans: "It has stood here for over 300 years"},
+                    {q: "3. The building / design / by / Sir Christopher Wren. => ____________", ans: "The building was designed by Sir Christopher Wren"},
+                    {q: "4. It / be / one of / famous / landmarks / in the world. => ____________", ans: "It is one of the most famous landmarks in the world"},
+                    {q: "5. The temple / build / in / 5th century BC. => ____________", ans: "The temple was built in the 5th century BC"},
+                    {q: "6. On your right / you / can / see / the magnificent opera house. => ____________", ans: "On your right you can see the magnificent opera house"},
+                    {q: "7. Lord Nelson / bury / in / the crypt. => ____________", ans: "Lord Nelson is buried in the crypt"},
+                    {q: "8. We / now / pass / the oldest bridge / in the city. => ____________", ans: "We are now passing the oldest bridge in the city"},
+                    {q: "9. This palace / say / to be / haunted. => ____________", ans: "This palace is said to be haunted"},
+                    {q: "10. In front of you / be / the national monument. => ____________", ans: "In front of you is the national monument"},
+                    {q: "11. The cathedral / restore / several times / since 1900. => ____________", ans: "The cathedral has been restored several times since 1900"},
+                    {q: "12. It / be / one of / tall / structures / in Asia. => ____________", ans: "It is one of the tallest structures in Asia"},
+                    {q: "13. This statue / carve / out of / marble / in 1850. => ____________", ans: "This statue was carved out of marble in 1850"},
+                    {q: "14. You / can / now / see / the floating market / on your left. => ____________", ans: "You can now see the floating market on your left"},
+                    {q: "15. The museum / visit / by / millions of tourists / every year. => ____________", ans: "The museum is visited by millions of tourists every year"}
+                ],
+                roleplayScenario: "<strong>Student A (Hướng dẫn viên du lịch):</strong> Đang dẫn tour xe buýt (City Sightseeing Tour). Thuyết minh giới thiệu danh thắng, chỉ vị trí, cung cấp lịch sử.<br><strong>Student B (Khách du lịch):</strong> Lắng nghe, đặt các câu hỏi tìm hiểu thêm (Người xây dựng, năm xây, chụp ảnh).",
+                presentationTopics: [
+                    "Topic 1: Delivering a tour commentary for a well-known attraction in your hometown.",
+                    "Topic 2: Essential qualities and techniques of a professional tour guide during a sightseeing trip."
+                ]
+            },
+            {
+                unit: 5, title: "Restaurants and Their Services",
+                vocab: [
+                    {word: "À la carte", ipa: "/ˌælaː ˈkɑːt/", meaning: "Món gọi theo thực đơn rời"},
+                    {word: "Maitre d'hotel", ipa: "/ˌmeɪtrə doʊˈtel/", meaning: "Trưởng quản lý dịch vụ nhà hàng"},
+                    {word: "Sommelier", ipa: "/səˈmel.i.eɪ/", meaning: "Nhân viên phục vụ rượu"},
+                    {word: "Mise en place", ipa: "/ˌmiːz ɒn ˈplɑːs/", meaning: "Công tác chuẩn bị trước giờ phục vụ"},
+                    {word: "Haute cuisine", ipa: "/ˌoʊt kwɪˈziːn/", meaning: "Ẩm thực cao cấp"}
+                ],
+                matchingQuestions: ["1. Maitre d'hotel", "2. Sommelier", "3. Mise en place", "4. À la carte", "5. Haute cuisine", "6. Host/Hostess", "7. Captain", "8. Bartender", "9. Amenities", "10. Apprentice"],
+                matchingRawDefs: [
+                    {code: "A", text: "The person responsible for the overall management of service in a restaurant"},
+                    {code: "B", text: "A specialist waiter responsible for wines and wine service"},
+                    {code: "C", text: "All preparatory work done before guests arrive and service begins"},
+                    {code: "D", text: "A menu with dishes individually priced"},
+                    {code: "E", text: "High-quality, traditional French cooking presented elaborately"},
+                    {code: "F", text: "Staff member responsible for greeting and seating guests"},
+                    {code: "G", text: "Waitperson in charge of a specific service station (15-25 guests)"},
+                    {code: "H", text: "Staff member responsible for preparing drinks at the bar"},
+                    {code: "I", text: "Enjoyable features or useful services provided by an establishment"},
+                    {code: "J", text: "A waitperson in training"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. Setting tables and filling saltshakers are parts of the essential ______ work.", ans: "mise en place"},
+                    {q: "2. The ______ recommended a perfect bottle of red wine to match our steak.", ans: "sommelier"},
+                    {q: "3. Luxury restaurants are famous for their exquisite ______.", ans: "haute cuisine"},
+                    {q: "4. You can order individual dishes from the ______ menu or choose the set menu.", ans: "à la carte"},
+                    {q: "5. The friendly ______ welcomed us at the entrance and led us to our table.", ans: "hostess"},
+                    {q: "6. The ______ oversees all waitstaff and service operations in the dining room.", ans: "maitre d'hotel"},
+                    {q: "7. Before becoming a front waiter, he spent a year working as a service ______.", ans: "apprentice"},
+                    {q: "8. Live music and a dance floor are popular ______ in this nightclub.", ans: "amenities"},
+                    {q: "9. The ______ served drinks efficiently to customers sitting at the counter.", ans: "bartender"},
+                    {q: "10. A restaurant's success depends heavily on clean facilities and polite guest ______.", ans: "service"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Mô tả cơ sở ăn uống và Giờ mở/đóng cửa (open for [lunch] from [X] to [Y] / close at [time]).",
+                structureExercises: [
+                    {q: "1. Our restaurant is open ______ lunch from 11.30 to 14.30.", ans: "for"},
+                    {q: "2. We close ______ midnight on Mondays.", ans: "at"},
+                    {q: "3. The coffee shop is open every day ______ Sundays.", ans: "except"},
+                    {q: "4. 'We don't work on Sunday evenings.' => We are closed ______ Sunday evenings.", ans: "on"},
+                    {q: "5. 'Dinner starts at 6 PM and ends at 10 PM.' => We serve dinner ______ 6 PM ______ 10 PM.", ans: "from... to"},
+                    {q: "6. The bistro is like a restaurant, but it ______ (serve) quick snacks.", ans: "serves"},
+                    {q: "7. Customers ______ (can/dance) to our live band every Friday night.", ans: "can dance"},
+                    {q: "8. We open ______ 7.00 AM for breakfast.", ans: "at"},
+                    {q: "9. Is the bar open ______ public holidays?", ans: "on"},
+                    {q: "10. The Cafe Grande has an outdoor terrace, but it ______ (not have) a car park.", ans: "doesn't have"},
+                    {q: "11. We are open from Tuesday ______ Saturday.", ans: "to"},
+                    {q: "12. The luxury restaurant is closed ______ Tuesdays.", ans: "on"},
+                    {q: "13. Guests ______ (can/enjoy) a panoramic view of the river from the rooftop.", ans: "can enjoy"},
+                    {q: "14. We serve à la carte dinner ______ 18.00 ______ 22.00.", ans: "from... to"},
+                    {q: "15. The club opens at 9 PM and closes ______ 3 AM.", ans: "at"}
+                ],
+                roleplayScenario: "<strong>Student A (Khách hàng):</strong> Gọi điện đến nhà hàng hỏi thông tin giờ mở/đóng cửa, loại thực đơn (à la carte, fixed price) và tiện ích.<br><strong>Student B (Lễ tân/Phục vụ):</strong> Nhận điện thoại, cung cấp đầy đủ thông tin phục vụ, món đặc trưng và tiện nghi.",
+                presentationTopics: [
+                    "Topic 1: Staff hierarchy and responsibilities in a large restaurant establishment.",
+                    "Topic 2: Designing a plan to open a new restaurant (concept, opening hours, menu type, and special amenities)."
+                ]
+            },
+            {
+                unit: 6, title: "Taking Customers' Orders",
+                vocab: [
+                    {word: "Aperitif", ipa: "/əˈper.ə.tiːf/", meaning: "Đồ uống khai vị"},
+                    {word: "Hors d’oeuvres", ipa: "/ˌɔːr ˈdɜːrv/", meaning: "Món khai vị"},
+                    {word: "Chef’s specialty", ipa: "/ʃef ˈspeʃ.əl.ti/", meaning: "Đặc sản của bếp trưởng"},
+                    {word: "Courtesy", ipa: "/ˈkɜː.tə.si/", meaning: "Sự lịch sự, nhã nhặn"},
+                    {word: "Pass the buck", ipa: "/pɑːs ðə bʌk/", meaning: "Đùn đẩy trách nhiệm"}
+                ],
+                matchingQuestions: ["1. Aperitif", "2. Appetizer", "3. Main course", "4. Dessert", "5. Pass the buck", "6. Empathy", "7. Courtesy", "8. Red tape", "9. Chef's specialty", "10. Beverage"],
+                matchingRawDefs: [
+                    {code: "A", text: "An alcoholic drink taken before a meal to stimulate the appetite"},
+                    {code: "B", text: "A small dish or food served before the main meal"},
+                    {code: "C", text: "The featured or primary dish in a meal"},
+                    {code: "D", text: "A sweet course served at the end of a meal"},
+                    {code: "E", text: "To shift responsibility or blame to someone else"},
+                    {code: "F", text: "The ability to understand and share the feelings of another"},
+                    {code: "G", text: "Polite, respectful, and considerate behavior"},
+                    {code: "H", text: "Excessive bureaucracy or adherence to official rules"},
+                    {code: "I", text: "A special dish that a particular chef or restaurant is famous for"},
+                    {code: "J", text: "Any drink other than water"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. Would you like to order an ______ such as dry martini before dinner?", ans: "aperitif"},
+                    {q: "2. For the ______, I will recommend our grill salmon with lemon sauce.", ans: "main course"},
+                    {q: "3. Never ______ when a customer complains; take personal responsibility to solve it.", ans: "pass the buck"},
+                    {q: "4. Staff should treat guests with utmost ______ and professionalism.", ans: "courtesy"},
+                    {q: "5. Seafood hotpot is one of our ______, highly recommended by many diners.", ans: "chef's specialties"},
+                    {q: "6. We had fruit salad and ice cream for ______.", ans: "dessert"},
+                    {q: "7. Efficient service means helping customers quickly without putting them through ______.", ans: "red tape"},
+                    {q: "8. Showing ______ helps waitstaff understand how a frustrated guest feels.", ans: "empathy"},
+                    {q: "9. Fresh spring rolls are served as an ______ to start the meal.", ans: "appetizer"},
+                    {q: "10. The restaurant offers a wide selection of hot and cold ______.", ans: "beverages"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Mạo từ A/An, The, Some; Mẫu câu ghi nhận order; Gợi ý & So sánh món ăn/rượu.",
+                structureExercises: [
+                    {q: "1. Would you like ______ aperitif while looking at the menu? (a / an / some)", ans: "an"},
+                    {q: "2. Could I have ______ glass of water, please? (a / an / some)", ans: "a"},
+                    {q: "3. I'd like ______ bread and butter, please. (a / an / some)", ans: "some"},
+                    {q: "4. ______ beer in this local pub is exceptionally good. (A / An / The)", ans: "The"},
+                    {q: "5. What do you recommend ______ a main course? (as / for / to)", ans: "as"},
+                    {q: "6. I can recommend the grilled lamb; it's one of the chef's ______ (special / specialties).", ans: "specialties"},
+                    {q: "7. The Beaujolais wine is ______ (light) than the Nuits St. Georges.", ans: "lighter"},
+                    {q: "8. The red wine is not as ______ (sweet) as the white wine.", ans: "sweet"},
+                    {q: "9. 'Can you give us a bit more time?' – '______, Madam.' (Certainly / Not at all)", ans: "Certainly"},
+                    {q: "10. I haven't decided ______ an appetizer yet. (about / on / with)", ans: "on"},
+                    {q: "11. Would you like to sit in ______ shade or in the sun? (a / an / the)", ans: "the"},
+                    {q: "12. Could we have ______ bill, please? (a / an / the)", ans: "the"},
+                    {q: "13. Which wine is ______ (full-bodied), the Merlot or the Cabernet?", ans: "more full-bodied"},
+                    {q: "14. I'd like ______ soup to start with. (a / an / some)", ans: "some"},
+                    {q: "15. I'm wondering ______ what to choose for dessert. (about / with)", ans: "about"}
+                ],
+                roleplayScenario: "<strong>Student A (Waiter/Waitress):</strong> Mời khai vị, trao menu, gợi ý Chef's specialty, so sánh món ăn/rượu khi được hỏi và ghi chép order.<br><strong>Student B (Customer):</strong> Đặt bàn, hỏi tư vấn chọn món, hỏi sự khác biệt giữa 2 món ăn/loại rượu và gọi món.",
+                presentationTopics: [
+                    "Topic 1: The Law of Service and basic expectations of restaurant customers.",
+                    "Topic 2: The Seven Deadly Sins in restaurant service and how to avoid them."
+                ]
+            },
+            {
+                unit: 7, title: "Explaining Dishes",
+                vocab: [
+                    {word: "Minced beef", ipa: "/mɪnst biːf/", meaning: "Thịt bò xay/băm"},
+                    {word: "Mashed potatoes", ipa: "/mæʃt pəˈteɪ.təʊz/", meaning: "Khoai tây nghiền"},
+                    {word: "Poached fish", ipa: "/pəʊtʃt fɪʃ/", meaning: "Cá chần/chưng"},
+                    {word: "Garnish", ipa: "/ˈɡɑː.nɪʃ/", meaning: "Trang trí món ăn"},
+                    {word: "Flambé", ipa: "/flɒmˈbeɪ/", meaning: "Rưới rượu đốt lửa"}
+                ],
+                matchingQuestions: ["1. Minced beef", "2. Mashed potatoes", "3. Poach", "4. Garnish", "5. Flambé", "6. Caramelize", "7. Sauté", "8. Table d'hote", "9. Dice", "10. Shred"],
+                matchingRawDefs: [
+                    {code: "A", text: "Beef that has been cut into very small pieces using a machine"},
+                    {code: "B", text: "Potatoes boiled and crushed into a soft smooth mass"},
+                    {code: "C", text: "To cook gently in small amount of simmering liquid"},
+                    {code: "D", text: "To decorate a dish with small items of food like herbs"},
+                    {code: "E", text: "To cover food with alcohol and set it alight briefly"},
+                    {code: "F", text: "To heat sugar until it turns brown and sweet syrup"},
+                    {code: "G", text: "To fry food quickly in a little hot fat or oil"},
+                    {code: "H", text: "A fixed-price menu with a set number of courses"},
+                    {code: "I", text: "To cut food into small square cubes"},
+                    {code: "J", text: "To cut or tear food into long, thin strips"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. Steak served with ______ potatoes and steamed vegetables is very popular.", ans: "mashed"},
+                    {q: "2. The chef will ______ the soup with fresh parsley and fried croutons before serving.", ans: "garnish"},
+                    {q: "3. To make French onion soup, you need to ______ onions slowly until brown.", ans: "caramelize"},
+                    {q: "4. Fish is gently ______ in milk and white wine to keep it tender.", ans: "poached"},
+                    {q: "5. The waiter prepared dessert at the table and began to ______ the pancakes with brandy.", ans: "flambé"},
+                    {q: "6. For spaghetti Bolognese, we use high-quality ______ beef.", ans: "minced"},
+                    {q: "7. ______ mushrooms in butter with garlic and black pepper makes a great side dish.", ans: "Sautéed"},
+                    {q: "8. Please ______ the carrots into tiny small cubes for the salad.", ans: "dice"},
+                    {q: "9. A classical ______ menu usually offers 3 to 5 courses at a fixed rate.", ans: "table d'hote"},
+                    {q: "10. Add a ______ of herbs to flavor the broth.", ans: "bouquet garni"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Quá khứ phân từ làm tính từ; Thể bị động miêu tả chế biến; Từ chỉ số lượng (Quantifiers) cho nguyên liệu.",
+                structureExercises: [
+                    {q: "1. They flavor the soup with fresh herbs. => The soup ____________", ans: "is flavored with fresh herbs"},
+                    {q: "2. They stuff the chicken with onions and nuts. => The chicken ____________", ans: "is stuffed with onions and nuts"},
+                    {q: "3. They serve the smoked salmon with brown bread. => The smoked salmon ____________", ans: "is served with brown bread"},
+                    {q: "4. They garnish the dish with fried bread. => The dish ____________", ans: "is garnished with fried bread"},
+                    {q: "5. They fry the vegetables in olive oil. => The vegetables ____________", ans: "are fried in olive oil"},
+                    {q: "6. They poach the fish in white wine. => The fish ____________", ans: "is poached in white wine"},
+                    {q: "7. They fill the pancakes with sweet cream cheese. => The pancakes ____________", ans: "are filled with sweet cream cheese"},
+                    {q: "8. We make French dressing from oil and vinegar. => French dressing ____________", ans: "is made from oil and vinegar"},
+                    {q: "9. The chef flavors the sauce with garlic. => The sauce ____________", ans: "is flavored with garlic"},
+                    {q: "10. Does it contain ______ (many/much) garlic?", ans: "much"},
+                    {q: "11. There are only a ______ (few/little) mushrooms in this sauce.", ans: "few"},
+                    {q: "12. This dish has ______ (no/few) MSG in it; it's completely natural.", ans: "no"},
+                    {q: "13. They serve the dish on a bed of fresh lettuce. => The dish ____________", ans: "is served on a bed of fresh lettuce"},
+                    {q: "14. They bake the ham with honey glaze. => The ham ____________", ans: "is baked with honey glaze"},
+                    {q: "15. They slice the potatoes finely before frying. => The potatoes ____________", ans: "are sliced finely before frying"}
+                ],
+                roleplayScenario: "<strong>Student A (Customer):</strong> Hỏi về món ăn (Tortilla, Ratatouille, Canh chua, Thịt kho), thành phần nguyên liệu (tỏi/hành/cay), cách chế biến.<br><strong>Student B (Waiter/Waitress):</strong> Giải thích chi tiết sử dụng câu bị động, tính từ miêu tả cách chế biến và từ chỉ lượng.",
+                presentationTopics: [
+                    "Topic 1: The structure and composition of a Classical French 13-course Menu versus modern short menus.",
+                    "Topic 2: Basic principles for organizing and formatting an attractive restaurant menu."
+                ]
+            },
+            {
+                unit: 8, title: "During the Meal",
+                vocab: [
+                    {word: "Trolley", ipa: "/ˈtrɒl.i/", meaning: "Xe đẩy phục vụ"},
+                    {word: "Soup tureen", ipa: "/suːp tʃuəˈriːn/", meaning: "Thố/âu đựng súp"},
+                    {word: "Undercooked", ipa: "/ˌʌn.dəˈkʊkt/", meaning: "Nấu chưa chín"},
+                    {word: "Overcooked", ipa: "/ˌəʊ.vəˈkʊkt/", meaning: "Nấu quá kỹ"},
+                    {word: "Tough", ipa: "/tʌf/", meaning: "Thịt dai"}
+                ],
+                matchingQuestions: ["1. Trolley", "2. Soup tureen", "3. Sauce boat", "4. Sideboard", "5. Hotplate", "6. Tough", "7. Tender", "8. Stale", "9. Overcooked", "10. Undercooked"],
+                matchingRawDefs: [
+                    {code: "A", text: "A small cart on wheels used for serving food/drinks in a restaurant"},
+                    {code: "B", text: "A deep covered dish from which soup is served at table"},
+                    {code: "C", text: "A boat-shaped vessel used for serving gravy or sauce"},
+                    {code: "D", text: "A piece of dining room furniture used for storing table linen and serving food"},
+                    {code: "E", text: "A heated metal plate used for keeping food warm"},
+                    {code: "F", text: "Meat that is hard to chew"},
+                    {code: "G", text: "Meat that is soft and easy to cut and chew"},
+                    {code: "H", text: "Bread or food that is no longer fresh and pleasant to eat"},
+                    {code: "I", text: "Cooked for too long, losing flavor or moisture"},
+                    {code: "J", text: "Not cooked sufficiently"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. The waiter rolled the dessert ______ to our table so we could choose cakes.", ans: "trolley"},
+                    {q: "2. Pour the gravy over your meat using the silver ______.", ans: "sauce boat"},
+                    {q: "3. I'm sorry, but this steak is extremely ______; I can hardly chew it.", ans: "tough"},
+                    {q: "4. The bread rolls are ______; please bring us fresh ones.", ans: "stale"},
+                    {q: "5. The chicken is ______; it's still pink and raw inside.", ans: "undercooked"},
+                    {q: "6. The waiter served hot soup directly from a porcelain ______.", ans: "soup tureen"},
+                    {q: "7. Plates are kept warm on the ______ before being carried to the dining table.", ans: "hotplate"},
+                    {q: "8. The roast beef was delicious, very juicy and ______.", ans: "tender"},
+                    {q: "9. Excuse me, this soup is far too ______; there is way too much salt in it.", ans: "salty"},
+                    {q: "10. Extra cutlery and napkins are neatly kept on the dining room ______.", ans: "sideboard"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Bày tỏ ý kiến/khen ngợi; Phàn nàn về món ăn; Cách đáp lại lịch sự của nhân viên.",
+                structureExercises: [
+                    {q: "1. 'Is everything all right, sir?' – 'No, this soup is far ______ salty.' (too / enough)", ans: "too"},
+                    {q: "2. 'I'm very sorry, Madam. Shall I ______ it away?' (take / bring)", ans: "take"},
+                    {q: "3. This meat is underdone; could you have the chef ______ it up for me? (heat / cook)", ans: "heat"},
+                    {q: "4. 'These rolls are stale.' – 'I'll bring you ______ ones right away.' (another / fresh)", ans: "fresh"},
+                    {q: "5. I sure am ______ this delicious seafood pasta! (enjoying / enjoying with)", ans: "enjoying"},
+                    {q: "6. 'The fish smells off.' – 'I'm ______ sorry, sir. I'll change it for you.' (terribly / small)", ans: "terribly"},
+                    {q: "7. The steak is so ______ (tough) that I cannot cut it.", ans: "tough"},
+                    {q: "8. Would you like ______ more wine, sir? (some / any)", ans: "some"},
+                    {q: "9. Is your dish cooked ______ your satisfaction? (to / with)", ans: "to"},
+                    {q: "10. 'Excuse me, my coffee is cold.' – 'I'll bring you a hot ______ immediately.' (one / coffee)", ans: "one"},
+                    {q: "11. The vegetables are overcooked and completely ______.", ans: "tasteless"},
+                    {q: "12. 'Shall I bring you another dessert?' – 'No, ______, I'm full.' (thanks / please)", ans: "thanks"},
+                    {q: "13. This melon is really sweet and ______.", ans: "juicy"},
+                    {q: "14. We apologize for the delay; your dish will be ready ______ a few minutes.", ans: "in"},
+                    {q: "15. 'I'm sorry, this wine is sour.' – 'I'll ask the sommelier to ______ another bottle.' (replace / clean)", ans: "replace"}
+                ],
+                roleplayScenario: "<strong>Student A (Waiter/Waitress):</strong> Hỏi thăm bàn khách (Is everything all right?), lắng nghe khen/chê và xử lý lịch sự.<br><strong>Student B & C (Customers):</strong> Một người khen ngợi món ăn, người còn lại phàn nàn về món ăn chưa đạt.",
+                presentationTopics: [
+                    "Topic 1: Professional rules for serving at the guest table (serving sequence, carrying and clearing plates).",
+                    "Topic 2: How restaurant staff should handle guest complaints during a meal effectively."
+                ]
+            },
+            {
+                unit: 9, title: "Hotel Reservations",
+                vocab: [
+                    {word: "Commercial hotel", ipa: "/kəˈmɜː.ʃəl həʊˈtel/", meaning: "Khách sạn thương mại"},
+                    {word: "Suite", ipa: "/swiːt/", meaning: "Phòng VIP gia đình/liên hoàn"},
+                    {word: "Guaranteed reservation", ipa: "/ˌɡær.ənˈtiːd ˌrez.əˈveɪ.ʃən/", meaning: "Đặt phòng được đảm bảo"},
+                    {word: "Overbooking", ipa: "/ˌəʊ.vəˈbʊk.ɪŋ/", meaning: "Đặt phòng vượt quá dung lượng"},
+                    {word: "Room chart", ipa: "/ruːm tʃɑːt/", meaning: "Sơ đồ phòng"}
+                ],
+                matchingQuestions: ["1. Airport hotel", "2. Motel", "3. Suite", "4. Guesthouse", "5. Room chart", "6. Overbooking", "7. Guaranteed reservation", "8. Walk-in guest", "9. Stayover", "10. Corporate client"],
+                matchingRawDefs: [
+                    {code: "A", text: "A hotel situated near an airport, convenient for transit passengers"},
+                    {code: "B", text: "A hotel designed for motorists, usually with parking directly outside"},
+                    {code: "C", text: "A series of connected luxury rooms used as a single unit"},
+                    {code: "D", text: "A small private house run by a family providing accommodation"},
+                    {code: "E", text: "A visual chart used by hotel staff to track room occupancy and bookings"},
+                    {code: "F", text: "The practice of selling more rooms than the hotel actually has"},
+                    {code: "G", text: "A reservation held all night because the guest prepaid or gave credit card details"},
+                    {code: "H", text: "A guest who arrives at a hotel without a prior reservation"},
+                    {code: "I", text: "A currently registered guest who extends their stay beyond original date"},
+                    {code: "J", text: "A business traveler whose stay is booked or paid by a company"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. Transit passengers usually stay at an ______ hotel near the terminal.", ans: "airport"},
+                    {q: "2. Mr. and Mrs. Dupont booked a luxury ______ with a living room and ocean view.", ans: "suite"},
+                    {q: "3. Drivers traveling along highways often spend the night in a ______.", ans: "motel"},
+                    {q: "4. The receptionist recorded the guest's details on the hotel's ______.", ans: "reservation form"},
+                    {q: "5. A ______ reservation guarantees that the hotel will hold the room even if the guest arrives late.", ans: "guaranteed"},
+                    {q: "6. Hotels practice ______ to balance possible no-shows and last-minute cancellations.", ans: "overbooking"},
+                    {q: "7. A ______ guest walked in at midnight asking if there were any vacant rooms.", ans: "walk-in"},
+                    {q: "8. Business travelers usually prefer staying in a centrally located ______ hotel.", ans: "commercial"},
+                    {q: "9. Backpackers with a tight budget often look for a cozy family-run ______.", ans: "guesthouse"},
+                    {q: "10. The front office manager uses the ______ to check room availability for next week.", ans: "room chart"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Mẫu câu miêu tả vị trí khách sạn; Lựa chọn loại phòng phù hợp; Tiếp nhận đặt phòng lịch sự với Would.",
+                structureExercises: [
+                    {q: "1. The SaigonCantho Hotel is centrally ______ in the heart of the city. (locate / located / locating)", ans: "located"},
+                    {q: "2. A low-end hotel would be ______ for a group of budget students. (suitable / suit)", ans: "suitable"},
+                    {q: "3. A twin room would be ______ for Joan and Sue. (nice / suit)", ans: "nice"},
+                    {q: "4. How many nights ______ that be for, sir? (will / would / do)", ans: "would"},
+                    {q: "5. ______ date would that be for? (When / What / How)", ans: "What"},
+                    {q: "6. The Victoria Hotel is situated ______ the bank of the Mekong River.", ans: "on"},
+                    {q: "7. The resort is located on the edge of town, ______ (overlook) the sea.", ans: "overlooking"},
+                    {q: "8. 'How long do you plan to stay?' => How many nights ____________?", ans: "would that be for"},
+                    {q: "9. 'Do you want a double room?' => Would that be ____________?", ans: "a double room"},
+                    {q: "10. An airport hotel would be suitable ______ transit passengers.", ans: "for"},
+                    {q: "11. We can give you a non-smoking room ______ $90 a night.", ans: "at"},
+                    {q: "12. Does the room rate ______ breakfast and service charges?", ans: "include"},
+                    {q: "13. The Asia Hotel is found near ______ ferry terminal.", ans: "the"},
+                    {q: "14. What name ______ that be under, please?", ans: "would"},
+                    {q: "15. I'd like to reserve a room ______ the 5th of April.", ans: "for"}
+                ],
+                roleplayScenario: "<strong>Student A (Receptionist):</strong> Nhận điện thoại đặt phòng, dùng Would xác định ngày, đêm lưu trú, loại phòng, số khách, báo giá, đọc mã xác nhận.<br><strong>Student B (Guest):</strong> Gọi điện đặt phòng gia đình/công tác, hỏi giá và dịch vụ đi kèm.",
+                presentationTopics: [
+                    "Topic 1: The importance of guest reservation systems in hotel management and revenue generation.",
+                    "Topic 2: Different sources of reservations and types of guests in the lodging industry."
+                ]
+            },
+            {
+                unit: 10, title: "Hotel Check-In",
+                vocab: [
+                    {word: "Registration card", ipa: "/ˌredʒ.ɪˈstreɪ.ʃən kɑːd/", meaning: "Thẻ/phiếu đăng ký lưu trú"},
+                    {word: "Porter", ipa: "/ˈpɔː.tər/", meaning: "Nhân viên hành lý"},
+                    {word: "Forenames", ipa: "/ˈfɔː.neɪmz/", meaning: "Tên gọi/tên đệm"},
+                    {word: "Surname", ipa: "/ˈsɜː.neɪm/", meaning: "Họ"},
+                    {word: "Method of payment", ipa: "/ˈmeθ.əd əv ˈpeɪ.mənt/", meaning: "Phương thức thanh toán"}
+                ],
+                matchingQuestions: ["1. Registration card", "2. Porter", "3. Surname", "4. Forenames", "5. Method of payment", "6. Next destination", "7. Check-in", "8. Room key assignment", "9. Front drive", "10. Occupants"],
+                matchingRawDefs: [
+                    {code: "A", text: "A form that a guest completes with personal details upon check-in"},
+                    {code: "B", text: "A hotel employee who carries guests' luggage to their rooms"},
+                    {code: "C", text: "Your family name or last name"},
+                    {code: "D", text: "Your first name(s) given at birth"},
+                    {code: "E", text: "How a guest intends to pay (cash, credit card, etc.)"},
+                    {code: "F", text: "The place where the guest is traveling to after leaving the hotel"},
+                    {code: "G", text: "The process of arriving and registering at a hotel"},
+                    {code: "H", text: "Giving a specific room key/card to a registered guest"},
+                    {code: "I", text: "The driveway area directly in front of the hotel entrance"},
+                    {code: "J", text: "The persons who reside or stay in a hotel room"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. Welcome to our hotel; please fill in this ______ card first.", ans: "registration"},
+                    {q: "2. The ______ will carry your heavy suitcases up to your room.", ans: "porter"},
+                    {q: "3. Please write your ______ and forenames clearly in block letters.", ans: "surname"},
+                    {q: "4. What is your intended ______ of payment, cash or credit card?", ans: "method"},
+                    {q: "5. After completing the form, the receptionist gave the guest their ______ key.", ans: "room"},
+                    {q: "6. A warm greeting at the ______ drive creates a great first impression for guests.", ans: "front"},
+                    {q: "7. Please state your next ______ after checking out from Hanoi.", ans: "destination"},
+                    {q: "8. How many ______ will be staying in this twin room?", ans: "occupants"},
+                    {q: "9. The ______ procedure usually takes only a few minutes at the front desk.", ans: "check-in"},
+                    {q: "10. Positive word-of-mouth ______ comes from satisfied repeat customers.", ans: "publicity"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Yêu cầu/gợi ý lịch sự với If (If you'd like to...); Đáp lại yêu cầu; Mẫu câu lấy thông tin đăng ký.",
+                structureExercises: [
+                    {q: "1. If you'd like to fill in this form, I ______ (give) you the key.", ans: "will give"},
+                    {q: "2. If I could just ask you ______ (sign) your name here.", ans: "to sign"},
+                    {q: "3. 'Can I check in now?' – '______, sir. If you'd like to give me your passport.' (Certainly / No)", ans: "Certainly"},
+                    {q: "4. 'Can you give me a wake-up call?' – 'No ______. What time would you like it?'", ans: "problem"},
+                    {q: "5. We have put you ______ Room 304 on the third floor.", ans: "in"},
+                    {q: "6. The porter ______ (take) your luggage up to your room.", ans: "will take"},
+                    {q: "7. If you'd like to follow the porter, he ______ (lead) you to the elevator.", ans: "will lead"},
+                    {q: "8. 'Can I get an early breakfast?' – 'Yes ______, Madam.'", ans: "indeed"},
+                    {q: "9. How do you ______ your surname, please? (write / spell)", ans: "spell"},
+                    {q: "10. If you'd like to hang the 'Do Not Disturb' sign, the maid ______ (not knock).", ans: "won't knock"},
+                    {q: "11. If I ______ (can) just see your identification card, please.", ans: "could"},
+                    {q: "12. I'll get the porter ______ (carry) these bags for you.", ans: "to carry"},
+                    {q: "13. Just a moment till I ______ (find) your reservation in the system.", ans: "find"},
+                    {q: "14. 'Can you tell the maid not to clean my room now?' – 'No ______.'", ans: "problem"},
+                    {q: "15. If you'd like to go to the cafe, you ______ (can/get) a hot snack.", ans: "can get"}
+                ],
+                roleplayScenario: "<strong>Student A (Receptionist):</strong> Chào đón khách check-in, tìm phiếu đặt phòng, mời điền Registration card bằng If you'd like to..., xác nhận thanh toán, giao chìa khóa.<br><strong>Student B (Guest):</strong> Cung cấp thông tin, hộ chiếu, yêu cầu thêm (báo thức, không làm phiền).",
+                presentationTopics: [
+                    "Topic 1: The guest registration process and its critical steps at the hotel front desk.",
+                    "Topic 2: The importance of the first ten minutes upon guest arrival in creating customer loyalty."
+                ]
+            },
+            {
+                unit: 11, title: "Hotel Check-Out",
+                vocab: [
+                    {word: "Settle a bill", ipa: "/ˈset.əl ə bɪl/", meaning: "Thanh toán hóa đơn"},
+                    {word: "Receipt", ipa: "/rɪˈsiːt/", meaning: "Biên lai/hóa đơn thanh toán"},
+                    {word: "Service charge", ipa: "/ˈsɜː.vɪs tʃɑːdʒ/", meaning: "Phí dịch vụ"},
+                    {word: "Folio", ipa: "/ˈfəʊ.li.əʊ/", meaning: "Sổ theo dõi tài khoản khách"},
+                    {word: "Late charges", ipa: "/leɪt tʃɑːdʒɪz/", meaning: "Phí phát sinh muộn"}
+                ],
+                matchingQuestions: ["1. Settle a bill", "2. Receipt", "3. Service charge", "4. Identification", "5. Late charges", "6. Guest history", "7. Folio", "8. Room rate", "9. VAT", "10. Credit record"],
+                matchingRawDefs: [
+                    {code: "A", text: "To pay the total amount of money owed for a stay or service"},
+                    {code: "B", text: "A printed piece of paper showing that money has been paid"},
+                    {code: "C", text: "An extra amount of money added to a bill for service"},
+                    {code: "D", text: "An official document proving who you are (e.g. passport)"},
+                    {code: "E", text: "Expenses incurred by a guest that appear after checkout"},
+                    {code: "F", text: "A record of a guest's previous stays, preferences, and details"},
+                    {code: "G", text: "A guest's hotel account statement listing all charges and payments"},
+                    {code: "H", text: "The price charged for staying in a hotel room for one night"},
+                    {code: "I", text: "Value Added Tax added to goods and services"},
+                    {code: "J", text: "Information about a guest's creditworthiness and payment history"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. Good morning, I would like to ______ my bill now as I am leaving.", ans: "settle"},
+                    {q: "2. Here is your payment ______; please keep it for your company accounting.", ans: "receipt"},
+                    {q: "3. The total amount includes a 10% ______ charge and 8% VAT.", ans: "service"},
+                    {q: "4. Do you have some form of ______, such as a driver's license or passport?", ans: "identification"},
+                    {q: "5. The front desk clerk retrieved the guest's ______ to review all charges.", ans: "folio"},
+                    {q: "6. To avoid missing ______, restaurant charges must be sent to the cashier instantly.", ans: "late charges"},
+                    {q: "7. Updating the ______ file helps the hotel know customer preferences for future visits.", ans: "guest history"},
+                    {q: "8. Item 3 on your bill is 20 dollars for the mini-bar and ______ call.", ans: "room"},
+                    {q: "9. The cashier confirmed that the tax and service charges were already ______ in the price.", ans: "included"},
+                    {q: "10. Please check your bill carefully to make sure there are no ______ in the calculation.", ans: "mistakes"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Yêu cầu lịch sự khi trả phòng (Would you sign here, please?); Giải thích khoản thu trong hóa đơn; Xử lý sai sót.",
+                structureExercises: [
+                    {q: "1. Would you ______ here, please? (sign / signature)", ans: "sign"},
+                    {q: "2. Item six is 15 dollars ______ the hotel garage fee. (for / of)", ans: "for"},
+                    {q: "3. That comes ______ 350 dollars altogether. (to / with)", ans: "to"},
+                    {q: "4. Service and tax ______ included in this total amount. (is / are)", ans: "are"},
+                    {q: "5. 'How are you paying?' – 'I'd like to pay ______ credit card.' (by / with)", ans: "by"},
+                    {q: "6. Item 9 was a mistake, so I have ______ it from your bill. (deducted / added)", ans: "deducted"},
+                    {q: "7. 'Please sign your name on this line.' => Would you ____________?", ans: "sign your name on this line, please"},
+                    {q: "8. 'The total cost is $250.' => That comes ____________.", ans: "to $250 altogether"},
+                    {q: "9. The first entry on your bill is your room ______ for three nights.", ans: "rate"},
+                    {q: "10. Do you have some form of identification ______ you? (with / on)", ans: "with"},
+                    {q: "11. Item 4 is for the laundry service ______ Tuesday.", ans: "on"},
+                    {q: "12. I am afraid I ______ (cannot) make the rate any less for you.", ans: "cannot"},
+                    {q: "13. Here ______ (be) your receipt and credit card.", ans: "is"},
+                    {q: "14. We hope you ______ (enjoy) your stay with us.", ans: "enjoyed"},
+                    {q: "15. The cashier communicates guest departure ______ the housekeeping department.", ans: "to"}
+                ],
+                roleplayScenario: "<strong>Student A (Cashier/Receptionist):</strong> Thực hiện checkout, in folio, giải thích khoản thu, sửa lỗi nếu có, nhận thanh toán, trao biên lai.<br><strong>Student B (Guest):</strong> Yêu cầu thanh toán, hỏi khoản phí lạ, ký tên và thanh toán.",
+                presentationTopics: [
+                    "Topic 1: The guest checkout procedures and effective communication among hotel departments.",
+                    "Topic 2: Importance of maintaining accurate guest histories for hotel marketing and customer retention."
+                ]
+            },
+            {
+                unit: 12, title: "Handling Complaints",
+                vocab: [
+                    {word: "Out of order", ipa: "/aʊt əv ˈɔː.dər/", meaning: "Bị hỏng/không hoạt động"},
+                    {word: "Spill", ipa: "/spɪl/", meaning: "Làm tràn/sánh nước"},
+                    {word: "Mop up", ipa: "/mɒp ʌp/", meaning: "Lau sạch nước"},
+                    {word: "Insist", ipa: "/ɪnˈsɪst/", meaning: "Khăng khăng/kiên quyết"},
+                    {word: "Apologize", ipa: "/əˈpɒl.ə.dʒaɪz/", meaning: "Xin lỗi"}
+                ],
+                matchingQuestions: ["1. Out of order", "2. Spill", "3. Mop up", "4. Regulations", "5. Insist", "6. Knock over", "7. Wipe off", "8. Screw back", "9. Apologize", "10. Sympathy"],
+                matchingRawDefs: [
+                    {code: "A", text: "Not working or operating properly"},
+                    {code: "B", text: "To cause liquid to flow over the edge of a container accidentally"},
+                    {code: "C", text: "To clean or dry a floor using a mop with liquid"},
+                    {code: "D", text: "Official rules or directives that must be followed"},
+                    {code: "E", text: "To demand something forcefully, not accepting refusal"},
+                    {code: "F", text: "To strike something so that it falls to the ground"},
+                    {code: "G", text: "To remove dirt or liquid from a surface using a cloth"},
+                    {code: "H", text: "To fasten or reattach something using screws"},
+                    {code: "I", text: "To express regret for something that one has done wrong"},
+                    {code: "J", text: "Feelings of pity and sorrow for someone else's misfortune"}
+                ],
+                matchingAnswerMap: {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J"},
+                fillQuestions: [
+                    {q: "1. I'm sorry, but the elevator is currently ______ of order.", ans: "out"},
+                    {q: "2. Be careful not to ______ coffee on the clean tablecloth.", ans: "spill"},
+                    {q: "3. The maid will come immediately to ______ up the spilled milk on the carpet.", ans: "mop"},
+                    {q: "4. I deeply ______ for the inconvenience caused to your sleep last night.", ans: "apologize"},
+                    {q: "5. The child accidentally ______ over a vase of fresh flowers in the lobby.", ans: "knocked"},
+                    {q: "6. Hotel ______ require all guests to wear formal attire in the main dining room.", ans: "regulations"},
+                    {q: "7. The receptionist will send a technician to ______ back the loose towel rail.", ans: "screw"},
+                    {q: "8. Please use a damp cloth to ______ off the dust mark on the table.", ans: "wipe"},
+                    {q: "9. We must politely ______ on observing the safety regulations of the hotel.", ans: "insist"},
+                    {q: "10. Showing ______ helps calm down an angry guest when a problem occurs.", ans: "sympathy"}
+                ],
+                structureNote: "<strong>Cấu trúc:</strong> Diễn tả điều đáng lẽ nên làm (Should have + V3/PII); Mức độ xin lỗi; Cam kết khắc phục; Từ chối lịch sự theo quy định.",
+                structureExercises: [
+                    {q: "1. The room hasn't been cleaned. => It should have ____________ (clean).", ans: "been cleaned"},
+                    {q: "2. The sheets are dirty. => They should have ____________ (replace).", ans: "been replaced"},
+                    {q: "3. 'I've spilt coffee on my dress.' – 'I'm ______ sorry. We'll pay the cleaning bill.' (terribly / small)", ans: "terribly"},
+                    {q: "4. What seems to ______ the problem, sir? (be / is)", ans: "be"},
+                    {q: "5. I'll send someone up to fix the TV ______ away. (right / far)", ans: "right"},
+                    {q: "6. I'm afraid that won't be ______; it is against our policy. (possible / problem)", ans: "possible"},
+                    {q: "7. Gentlemen ______ wear jacket and tie in the restaurant. (have to / may)", ans: "have to"},
+                    {q: "8. 'Why didn't the maid change the towels?' => The maid should ____________.", ans: "have changed the towels"},
+                    {q: "9. I understand ______ you feel, Madam, and I apologize for the noise. (how / what)", ans: "how"},
+                    {q: "10. Would you like to ______ a tie from the reception? (borrow / lend)", ans: "borrow"},
+                    {q: "11. We'll be glad to ______ for the dry cleaning of your coat. (pay / buy)", ans: "pay"},
+                    {q: "12. I'll have the chef ______ this soup up for you right now. (heat / heated)", ans: "heat"},
+                    {q: "13. We have to ______ the hotel regulations strictly. (observe / look)", ans: "observe"},
+                    {q: "14. 'I've broken a glass.' – 'It's all right. I'll send someone to clear ______ the pieces.'", ans: "up"},
+                    {q: "15. I'll talk to the Head Waiter ______ that matter immediately. (about / with)", ans: "about"}
+                ],
+                roleplayScenario: "<strong>Student A (Staff):</strong> Tiếp nhận phàn nàn, xin lỗi theo đúng mức độ, giải thích, đưa ra giải pháp khắc phục ngay lập tức hoặc kiên quyết giữ quy định.<br><strong>Student B (Guest):</strong> Bất bình về dịch vụ/không hài lòng với quy định, yêu cầu giải quyết.",
+                presentationTopics: [
+                    "Topic 1: Effective strategies and steps for front office staff to handle guest complaints professionally.",
+                    "Topic 2: Balancing hotel regulations enforcement and maintaining customer satisfaction and goodwill."
+                ]
+            }
+        ];
+
+        let currentUnitIndex = 0;
+
+        function loadSidebar() {
+            const list = document.getElementById("unitList");
+            list.innerHTML = "";
+            curriculumData.forEach((u, idx) => {
+                const div = document.createElement("div");
+                div.className = `unit-item ${idx === currentUnitIndex ? 'active' : ''}`;
+                div.innerHTML = `<span>UNIT ${u.unit}</span>${u.title}`;
+                div.onclick = () => { selectUnit(idx); if(window.innerWidth <= 900) toggleMobileSidebar(); };
+                list.appendChild(div);
+            });
+        }
+
+        function selectUnit(idx) {
+            currentUnitIndex = idx;
+            loadSidebar();
+            renderUnitContent();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            
+            if(tabName === 'vocab') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tab-vocab').classList.add('active');
+            } else if(tabName === 'structure') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tab-structure').classList.add('active');
+            } else if(tabName === 'roleplay') {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('tab-roleplay').classList.add('active');
+                initRolePlaySession();
+            } else if(tabName === 'presentation') {
+                document.querySelectorAll('.tab-btn')[3].classList.add('active');
+                document.getElementById('tab-presentation').classList.add('active');
+                initPresentationSession();
+            }
+        }
+
+        let currentShuffledDefs = [];
+
+        function renderUnitContent() {
+            const u = curriculumData[currentUnitIndex];
+            document.getElementById("currentUnitTitle").innerText = `Unit ${u.unit}: ${u.title}`;
+
+            // Vocab Cards
+            let vocabHtml = "";
+            u.vocab.forEach((v) => {
+                vocabHtml += `
+                    <div class="vocab-card">
+                        <h4>${v.word}</h4>
+                        <div class="ipa">${v.ipa}</div>
+                        <p>${v.meaning}</p>
+                        <button class="btn-audio" type="button" onclick="speakText('${v.word}')"><i class="fa-solid fa-volume-high"></i> Listen Pronunciation</button>
+                    </div>`;
+            });
+            document.getElementById("vocabGrid").innerHTML = vocabHtml;
+
+            // Matching Questions & Random Definitions
+            let matchQHtml = "";
+            u.matchingQuestions.forEach((q, i) => {
+                matchQHtml += `
+                    <div class="matching-item">
+                        <span><strong>${q}</strong></span>
+                        <select id="match_select_${i}">
+                            <option value="">-- Choose --</option>
+                            ${"ABCDEFGHIJ".split('').map(l => `<option value="${l}">${l}</option>`).join('')}
+                        </select>
+                    </div>`;
+            });
+            document.getElementById("matchingQuestions").innerHTML = matchQHtml;
+
+            // Xáo trộn định nghĩa Part 1 Random
+            currentShuffledDefs = [...u.matchingRawDefs].sort(() => Math.random() - 0.5);
+            let labels = "ABCDEFGHIJ".split('');
+            let matchDHtml = "";
+            currentShuffledDefs.forEach((d, idx) => {
+                d.currentLetter = labels[idx];
+                matchDHtml += `<div style="margin-bottom:8px; font-size:0.88rem;"><strong>${labels[idx]}.</strong> ${d.text}</div>`;
+            });
+            document.getElementById("matchingDefinitions").innerHTML = matchDHtml;
+            document.getElementById("matchingScoreBadge").innerText = "Score: - / 10";
+
+            // Part 2 Fill Blanks
+            let fillHtml = "";
+            u.fillQuestions.forEach((fq, i) => {
+                fillHtml += `
+                    <div class="fill-item">
+                        <span style="flex:1;">${fq.q}</span>
+                        <input type="text" id="fill_in_${i}" placeholder="Type answer...">
+                    </div>`;
+            });
+            document.getElementById("fillQuestions").innerHTML = fillHtml;
+            document.getElementById("fillScoreBadge").innerText = "Score: - / 10";
+
+            // Structure Notes & Exercises
+            document.getElementById("structureNotes").innerHTML = u.structureNote;
+            let structHtml = "";
+            u.structureExercises.forEach((se, i) => {
+                structHtml += `
+                    <div class="fill-item">
+                        <span style="flex:1;">${se.q}</span>
+                        <input type="text" id="struct_in_${i}" placeholder="Type answer...">
+                    </div>`;
+            });
+            document.getElementById("structureExercises").innerHTML = structHtml;
+            document.getElementById("structureScoreBadge").innerText = "Score: - / 15";
+
+            // Roleplay Scenario
+            document.getElementById("roleplayDescContainer").innerHTML = `
+                <div class="topic-card" style="margin-bottom: 14px;">
+                    <h4 style="color: var(--primary); margin-bottom: 6px;"><i class="fa-solid fa-circle-info"></i> Role-play Scenario (Unit ${u.unit}):</h4>
+                    <p style="font-size: 0.92rem; line-height: 1.5;">${u.roleplayScenario}</p>
+                </div>`;
+
+            // Presentation Topics
+            let presHtml = "";
+            u.presentationTopics.forEach((pt, i) => {
+                presHtml += `<div class="topic-card"><h4 style="color: var(--primary); margin-bottom: 4px;">Option ${i+1}</h4><p style="font-size: 0.95rem;">${pt}</p></div>`;
+            });
+            document.getElementById("presTopicsContainer").innerHTML = presHtml;
+        }
+
+        function gradeMatching() {
+            if(!currentUser || currentUser.role !== 'student') {
+                alert("Vui lòng đăng nhập với tư cách Sinh viên để nộp bài!");
+                return;
+            }
+            const u = curriculumData[currentUnitIndex];
+            let score = 0;
+            u.matchingQuestions.forEach((q, i) => {
+                const userSelectedLetter = document.getElementById(`match_select_${i}`).value.trim().toUpperCase();
+                const targetCode = u.matchingAnswerMap[i]; // Ví dụ C
+                const matchedObj = currentShuffledDefs.find(d => d.code === targetCode);
+                if(matchedObj && matchedObj.currentLetter === userSelectedLetter) {
+                    score++;
+                }
+            });
+            document.getElementById("matchingScoreBadge").innerText = `Score: ${score} / 10`;
+            logActivity(u.unit, "Vocabulary Matching", `${score}/10`, "Completed randomized matching exercise");
+            alert(`Bạn đạt ${score}/10 điểm phần Matching! Đã lưu kết quả về hệ thống giáo viên.`);
+        }
+
+        function gradeFillInBlanks() {
+            if(!currentUser || currentUser.role !== 'student') {
+                alert("Vui lòng đăng nhập với tư cách Sinh viên để nộp bài!");
+                return;
+            }
+            const u = curriculumData[currentUnitIndex];
+            let score = 0;
+            u.fillQuestions.forEach((fq, i) => {
+                const val = document.getElementById(`fill_in_${i}`).value.trim().toLowerCase();
+                if(val === fq.ans.toLowerCase()) score++;
+            });
+            document.getElementById("fillScoreBadge").innerText = `Score: ${score} / 10`;
+            logActivity(u.unit, "Fill in the Blanks", `${score}/10`, "Completed fill-in-blanks exercise");
+            alert(`Bạn đạt ${score}/10 điểm phần Điền vào chỗ trống! Đã lưu kết quả về hệ thống giáo viên.`);
+        }
+
+        function gradeStructureExercises() {
+            if(!currentUser || currentUser.role !== 'student') {
+                alert("Vui lòng đăng nhập với tư cách Sinh viên để nộp bài!");
+                return;
+            }
+            const u = curriculumData[currentUnitIndex];
+            let score = 0;
+            u.structureExercises.forEach((se, i) => {
+                const val = document.getElementById(`struct_in_${i}`).value.trim().toLowerCase();
+                if(val === se.ans.toLowerCase()) score++;
+            });
+            document.getElementById("structureScoreBadge").innerText = `Score: ${score} / 15`;
+            logActivity(u.unit, "Structure Exercises", `${score}/15`, "Completed structure practice");
+            alert(`Bạn đạt ${score}/15 điểm phần Cấu trúc câu! Đã lưu kết quả về hệ thống giáo viên.`);
+        }
+
+        function speakText(text) {
+            if('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Trình duyệt không hỗ trợ phát âm giọng nói.");
+            }
+        }
+
+        let roleplayChatLog = [];
+        function initRolePlaySession() {
+            const u = curriculumData[currentUnitIndex];
+            roleplayChatLog = [
+                {sender: 'ai', text: `Hello! Welcome. I'm your AI consultant for Unit ${u.unit} (${u.title}). How can I assist you today?`}
+            ];
+            renderChatMessages();
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById("chatMessages");
+            container.innerHTML = "";
+            roleplayChatLog.forEach(msg => {
+                const div = document.createElement("div");
+                div.className = `chat-bubble ${msg.sender}`;
+                div.innerHTML = msg.text;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById("chatInput");
+            const text = input.value.trim();
+            if(!text) return;
+            roleplayChatLog.push({sender: 'user', text: text});
+            input.value = "";
+            renderChatMessages();
+
+            setTimeout(() => {
+                let aiReply = "Thank you for the information! I am highly recommending our best service for you. Is there anything else you need?";
+                roleplayChatLog.push({sender: 'ai', text: aiReply});
+                renderChatMessages();
+            }, 1000);
+        }
+
+        let isRolePlayRecording = false;
+        function toggleRolePlayVoice() {
+            const micIcon = document.getElementById("micChatIcon");
+            if(!isRolePlayRecording) {
+                isRolePlayRecording = true;
+                micIcon.style.color = "red";
+                document.getElementById("chatInput").placeholder = "Listening...";
+                if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const recognition = new SpeechRecognition();
+                    recognition.lang = 'en-US';
+                    recognition.onresult = (event) => {
+                        document.getElementById("chatInput").value = event.results[0][0].transcript;
+                        toggleRolePlayVoice();
+                        sendChatMessage();
+                    };
+                    recognition.onerror = () => { toggleRolePlayVoice(); };
+                    recognition.start();
+                } else {
+                    setTimeout(() => {
+                        document.getElementById("chatInput").value = "I am looking for a package tour and itinerary details.";
+                        toggleRolePlayVoice();
+                        sendChatMessage();
+                    }, 3000);
+                }
+            } else {
+                isRolePlayRecording = false;
+                micIcon.style.color = "";
+                document.getElementById("chatInput").placeholder = "Type or speak your answer...";
+            }
+        }
+
+        // ĐÁNH GIÁ ROLE-PLAY THEO 4 TIÊU CHÍ CHUẨN ĐỀ BÀI
+        function endRolePlaySession() {
+            if(!currentUser || currentUser.role !== 'student') {
+                alert("Vui lòng đăng nhập với tư cách Sinh viên để nộp bài!");
+                return;
+            }
+            const u = curriculumData[currentUnitIndex];
+            const userMessages = roleplayChatLog.filter(m => m.sender === 'user').map(m => m.text);
+            const fullUserText = userMessages.join(" ").toLowerCase();
+            const wordCount = fullUserText.split(/\s+/).filter(w => w.length > 0).length;
+
+            let scoreTask = 0, scoreVocab = 0, scoreGrammar = 0, scoreTone = 0;
+
+            // a. Task Achievement (30%)
+            if(wordCount > 30) scoreTask = 8.5;
+            else if(wordCount >= 15) scoreTask = 6.5;
+            else if(wordCount >= 5) scoreTask = 4.0;
+            else scoreTask = 2.0;
+
+            // b. Tourism Terminology & Vocabulary (25%)
+            if(fullUserText.includes("itinerary") || fullUserText.includes("tour") || fullUserText.includes("heritage") || fullUserText.includes("booking") || fullUserText.includes("hotel") || fullUserText.includes("service")) {
+                scoreVocab = 8.5;
+            } else if(wordCount > 10) {
+                scoreVocab = 6.5;
+            } else {
+                scoreVocab = 4.0;
+            }
+
+            // c. Grammar & Sentence Structure (25%)
+            if(fullUserText.includes("could you") || fullUserText.includes("recommend") || fullUserText.includes("if you") || fullUserText.includes("would you")) {
+                scoreGrammar = 8.5;
+            } else if(wordCount > 10) {
+                scoreGrammar = 6.5;
+            } else {
+                scoreGrammar = 4.5;
+            }
+
+            // d. Fluency & Professional Tone (20%)
+            if(wordCount > 20) scoreTone = 8.5;
+            else if(wordCount >= 10) scoreTone = 6.5;
+            else scoreTone = 5.0;
+
+            let finalOverall = ((scoreTask * 0.3) + (scoreVocab * 0.25) + (scoreGrammar * 0.25) + (scoreTone * 0.2)).toFixed(1);
+
+            logActivity(u.unit, "AI Role-Play", `${finalOverall}/10`, `Task: ${scoreTask}, Vocab: ${scoreVocab}, Grammar: ${scoreGrammar}, Tone: ${scoreTone}`);
+
+            document.getElementById("roleplayFinalEval").innerHTML = `
+                <div class="card" style="background:#f0fdf4; border-color:#bbf7d0;">
+                    <h4 style="color:var(--primary); margin-bottom:8px;"><i class="fa-solid fa-award"></i> BỘ TIÊU CHÍ ĐÁNH GIÁ ROLE-PLAY (Unit ${u.unit})</h4>
+                    <p style="font-size:1.1rem; font-weight:700; color:var(--primary);">Overall Score: ${finalOverall} / 10</p>
+                    <ul style="margin-top:8px; font-size:0.9rem; line-height:1.6; padding-left:20px;">
+                        <li><strong>Task Achievement (30%):</strong> ${scoreTask}/10</li>
+                        <li><strong>Tourism Terminology & Vocab (25%):</strong> ${scoreVocab}/10</li>
+                        <li><strong>Grammar & Sentence Structure (25%):</strong> ${scoreGrammar}/10</li>
+                        <li><strong>Fluency & Professional Tone (20%):</strong> ${scoreTone}/10</li>
+                    </ul>
+                </div>`;
+            alert("Đã hoàn thành đánh giá Role-Play và lưu vào báo cáo giáo viên!");
+        }
+
+        function initPresentationSession() {
+            document.getElementById("presEvaluationArea").style.display = "none";
+        }
+
+        let isPresRecording = false;
+        let presRecognitionInstance = null;
+        function togglePresentationRecording() {
+            const btn = document.getElementById("presMicBtn");
+            const textSpan = document.getElementById("presMicText");
+            const transcriptBox = document.getElementById("presTranscriptBox");
+
+            if(!isPresRecording) {
+                isPresRecording = true;
+                btn.className = "btn-mic recording";
+                textSpan.innerText = "Stop Presentation Recording";
+                transcriptBox.innerText = "Recording your presentation...";
+
+                if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    presRecognitionInstance = new SpeechRecognition();
+                    presRecognitionInstance.lang = 'en-US';
+                    presRecognitionInstance.continuous = true;
+                    presRecognitionInstance.interimResults = true;
+
+                    let finalTranscript = "";
+                    presRecognitionInstance.onresult = (event) => {
+                        let interim = "";
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) {
+                                finalTranscript += event.results[i][0].transcript + " ";
+                            } else {
+                                interim += event.results[i][0].transcript;
+                            }
+                        }
+                        transcriptBox.innerText = finalTranscript + interim;
+                    };
+                    presRecognitionInstance.onerror = () => { stopPresRec(); };
+                    presRecognitionInstance.onend = () => { if(isPresRecording) stopPresRec(); };
+                    presRecognitionInstance.start();
+                } else {
+                    setTimeout(() => {
+                        transcriptBox.innerText = "First of all, welcome to our presentation. Today I am going to talk about famous tourist attractions. Moving on to Mekong Delta, there are beautiful floating markets, waterfalls and heritage sites. To sum up, this destination is a wonderful place for every visitor.";
+                        stopPresRec();
+                    }, 4000);
+                }
+            } else {
+                stopPresRec();
+            }
+        }
+
+        function stopPresRec() {
+            if(presRecognitionInstance) {
+                try { presRecognitionInstance.stop(); } catch(e){}
+            }
+            isPresRecording = false;
+            const btn = document.getElementById("presMicBtn");
+            const textSpan = document.getElementById("presMicText");
+            btn.className = "btn-mic";
+            textSpan.innerText = "Start Presentation Recording";
+
+            evaluatePresentationTranscript(document.getElementById("presTranscriptBox").innerText);
+        }
+
+        // ĐÁNH GIÁ PRESENTATION THEO 4 TIÊU CHÍ CHUẨN ĐỀ BÀI
+        function evaluatePresentationTranscript(transcript) {
+            if(!currentUser || currentUser.role !== 'student') {
+                alert("Vui lòng đăng nhập với tư cách Sinh viên để nộp bài!");
+                return;
+            }
+            const u = curriculumData[currentUnitIndex];
+            const lowerText = transcript.toLowerCase();
+            const words = transcript.split(/\s+/).filter(w => w.length > 0);
+            const wordCount = words.length;
+
+            let scoreStructure = 0, scoreContent = 0, scoreLexical = 0, scorePronun = 0;
+
+            // a. Structure & Organization (25%)
+            if(lowerText.includes("first of all") || lowerText.includes("moving on to") || lowerText.includes("in addition") || lowerText.includes("to sum up")) {
+                scoreStructure = 8.5;
+            } else if(wordCount > 50) {
+                scoreStructure = 6.5;
+            } else if(wordCount > 20) {
+                scoreStructure = 4.5;
+            } else {
+                scoreStructure = 2.5;
+            }
+
+            // b. Content & Industry Knowledge (30%)
+            if(wordCount >= 100) scoreContent = 8.5;
+            else if(wordCount >= 70) scoreContent = 6.5;
+            else if(wordCount >= 35) scoreContent = 5.0;
+            else scoreContent = 3.0;
+
+            // c. Lexical Resource & Grammar (25%)
+            if((lowerText.includes("good") || lowerText.includes("nice") || lowerText.includes("beautiful")) && wordCount < 50) {
+                scoreLexical = 5.0;
+            } else if(wordCount >= 80) {
+                scoreLexical = 8.5;
+            } else {
+                scoreLexical = 6.5;
+            }
+
+            // d. Pronunciation, Pacing & Word Count (20%)
+            if(wordCount >= 100) scorePronun = 8.5;
+            else if(wordCount >= 70) scorePronun = 6.5;
+            else if(wordCount >= 50) scorePronun = 5.0;
+            else scorePronun = 3.5;
+
+            let finalOverall = ((scoreStructure * 0.25) + (scoreContent * 0.30) + (scoreLexical * 0.25) + (scorePronun * 0.20)).toFixed(1);
+
+            logActivity(u.unit, "Presentation Examiner", `${finalOverall}/10`, `Word count: ${wordCount} words. Struct: ${scoreStructure}, Content: ${scoreContent}, Lexical: ${scoreLexical}, Pronun: ${scorePronun}`);
+
+            document.getElementById("scorePresOverall").innerText = `${finalOverall}/10`;
+            document.getElementById("scorePresStructure").innerText = `${scoreStructure}/10`;
+            document.getElementById("scorePresContent").innerText = `${scoreContent}/10`;
+            document.getElementById("scorePresLexical").innerText = `${scoreLexical}/10`;
+            document.getElementById("scorePresPronun").innerText = `${scorePronun}/10`;
+
+            let highlighted = transcript.replace(/(good|nice|beautiful)/gi, '<span class="error-text">$1</span>');
+
+            document.getElementById("presDetailedFeedback").innerHTML = `
+                <strong>Speech Transcript (${wordCount} words):</strong> ${highlighted}<br><br>
+                <strong>Examiner Evaluation:</strong><br>
+                - <strong>Structure & Org (25%):</strong> ${scoreStructure}/10<br>
+                - <strong>Content & Knowledge (30%):</strong> ${scoreContent}/10<br>
+                - <strong>Lexical & Grammar (25%):</strong> ${scoreLexical}/10<br>
+                - <strong>Pronunciation & Word Count (20%):</strong> ${scorePronun}/10
+            `;
+            document.getElementById("presEvaluationArea").style.display = "block";
+            alert("Đã hoàn thành phân tích bài thuyết trình và lưu vào báo cáo giáo viên!");
+        }
+
+        // Xuất báo cáo Excel (CSV)
+        function exportExcelReport() {
+            let logsToExport = studentLogs;
+            
+            if(currentUser && currentUser.role === 'student') {
+                logsToExport = studentLogs.filter(l => l.name === currentUser.name && l.className === currentUser.className);
+            }
+
+            if(logsToExport.length === 0) {
+                alert("Chưa có dữ liệu học tập nào để xuất báo cáo!");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "Họ tên,Lớp,Thời gian,Unit,Hoạt động,Điểm số,Chi tiết\n";
+
+            logsToExport.forEach(log => {
+                const safeDetail = `"${log.detail.replace(/"/g, '""')}"`;
+                csvContent += `"${log.name}","${log.className}","${log.time}","${log.unit}","${log.activity}","${log.score}",${safeDetail}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `TACN_Report_${currentUser ? currentUser.name : 'System'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        loadSidebar();
+        renderUnitContent();
+    </script>
+</body>
+</html>
